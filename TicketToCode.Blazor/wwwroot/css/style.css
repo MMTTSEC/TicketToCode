@@ -46,3 +46,25 @@ article form input {
             border: 2px solid rgb(32 109 163);
             box-shadow: 0px 0px 5px rgb(46 136 199);
         }
+
+span.success, span.warning, span.error, span.working {
+    font-size: 12px;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+span.success {
+    color: green;
+}
+
+span.warning {
+    color: orange;
+}
+
+span.error {
+    color: red;
+}
+
+span.working {
+    color: blue;
+}

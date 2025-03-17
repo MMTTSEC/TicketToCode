@@ -2,25 +2,93 @@
 
 <PageTitle>Login/Register</PageTitle>
 
+<!-- Without Blazor Form Validation -->
+<!-- <div id="login">
+<h1>Login</h1>
+<form method="POST" action="/auth/login">
+<input type="text" id="uname" name="uname" placeholder="Username" required />
+<input type="password" id="upass" name="upass" placeholder="Password" minlength="8" required />
+<button type="submit">Login</button>
+</form>
+</div>
+
+<div id="register">
+<h1>Register</h1>
+<form method="POST" action="/auth/register">
+<input type="text" id="reguname" name="reguname" placeholder="Username" required />
+<input type="password" id="regupass" name="regupass" @bind="Password" @bind:event="oninput" placeholder="Password" minlength="8" required />
+<input type="password" id="regurepass" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
+@if (PasswordMatches) { } else { <span class="error">Passwords doesn't match.</span> }
+<button type="submit" @onclick="DoesPasswordsMatch">Register</button>
+</form>
+</div> -->
+
+<!-- With Blazor Form Validation -->
 <div id="login">
     <h1>Login</h1>
-    <form method="POST" action="/auth/login">
+    <EditForm Model=@LoginForms OnSubmit="@LoginFormSubmitted">
         <input type="text" id="uname" name="uname" placeholder="Username" required />
         <input type="password" id="upass" name="upass" placeholder="Password" minlength="8" required />
         <button type="submit">Login</button>
-    </form>
+    </EditForm>
 </div>
 
 <div id="register">
     <h1>Register</h1>
-    <form method="POST" action="/auth/register">
-        <input type="text" id="uname" name="uname" placeholder="Username" required />
-        <input type="password" id="upass" name="upass" placeholder="Password" minlength="8" required />
-        <input type="password" id="urepass" name="urepass" placeholder="Re:Password" minlength="8" required />
-        <button type="submit">Register</button>
-    </form>
+    <EditForm Model=@RegisterForms OnSubmit="@RegisterFormSubmitted">
+        <input type="text" id="reguname" name="reguname" placeholder="Username" required />
+        <input type="password" id="regupass" name="regupass" @bind="Password" @bind:event="oninput" placeholder="Password" minlength="8" required />
+        <input type="password" id="regurepass" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
+        @if (!PasswordMatches && Password != "" && RePassword != "") { <span class="error">Passwords doesn't match.</span> } else { }
+        <button type="submit" @onclick="DoesPasswordsMatch">Register</button>
+    </EditForm>
 </div>
+<p>
+    @if (LoginFormStatus != "Not submitted")
+    {
+        <span class="success">@LoginFormStatus</span>
+    }
+    else
+    {
+        <span class="warning">@LoginFormStatus</span>
+    }  | 
+    @if (RegisterFormStatus != "Not submitted")
+    {
+        <span class="success">@RegisterFormStatus</span> 
+    } else {
+        <span class="warning">@RegisterFormStatus</span>
+    }
+</p>
 
 @code {
+    string LoginFormStatus = "Not submitted";
+    string RegisterFormStatus = "Not submitted";
 
+    public string Password = "";
+    public string RePassword = "";
+    private bool PasswordMatches;
+
+    private void DoesPasswordsMatch() 
+    {
+        if(Password == RePassword) {
+            PasswordMatches = true;
+        } else {
+            PasswordMatches = false;
+        }
+    }
+    LoginForm LoginForms = new LoginForm();
+    RegisterForm RegisterForms = new RegisterForm();
+
+    public class LoginForm {}
+    public class RegisterForm {}
+
+    void LoginFormSubmitted() {
+        LoginFormStatus = "Login Form Submitted";
+    }
+    void RegisterFormSubmitted()
+    {
+        if(PasswordMatches) {
+            RegisterFormStatus = "Register Form Submitted";
+        }
+    }
 }
