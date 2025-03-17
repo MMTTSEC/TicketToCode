@@ -2,9 +2,24 @@
 
 <PageTitle>Login/Register</PageTitle>
 
-<h1>Login</h1>
+<div id="login">
+    <h1>Login</h1>
+    <form method="POST" action="/auth/login">
+        <input type="text" id="uname" name="uname" placeholder="Username" required />
+        <input type="password" id="upass" name="upass" placeholder="Password" minlength="8" required />
+        <button type="submit">Login</button>
+    </form>
+</div>
 
-<h1>Register</h1>
+<div id="register">
+    <h1>Register</h1>
+    <form method="POST" action="/auth/register">
+        <input type="text" id="uname" name="uname" placeholder="Username" required />
+        <input type="password" id="upass" name="upass" placeholder="Password" minlength="8" required />
+        <input type="password" id="urepass" name="urepass" placeholder="Re:Password" minlength="8" required />
+        <button type="submit">Register</button>
+    </form>
+</div>
 
 @code {
 

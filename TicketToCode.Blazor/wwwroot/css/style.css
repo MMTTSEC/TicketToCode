@@ -1,5 +1,6 @@
 ﻿h1 {
     color: black;
+    margin-top: 40px;
 }
 
 article {
@@ -7,3 +8,41 @@ article {
     flex-direction: column;
     align-items: center;
 }
+
+article div h1 {
+    text-align: center;
+    margin-top: 0;
+    padding-bottom: 5px;
+    color: gray;
+}
+
+article div#login, article div#register {
+    border: 1px solid darkgray;
+    padding: 15px;
+    margin-top: 40px;
+}
+
+article form {
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+article form input {
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+    article form button {
+        background-color: rgb(66 166 237);
+        border: 2px solid rgb(59 149 213);
+        color: white;
+        padding: 7px 10px 5px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+        article form button:hover {
+            background-color: rgb(46 136 199);
+            border: 2px solid rgb(32 109 163);
+            box-shadow: 0px 0px 5px rgb(46 136 199);
+        }
