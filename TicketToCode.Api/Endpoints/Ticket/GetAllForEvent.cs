@@ -2,5 +2,6 @@
 {
     public class GetAllForEvent
     {
+        // GET /tickets/event/{eventId} | Get all tickets for an event.(admin)
     }
 }

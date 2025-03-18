@@ -2,5 +2,6 @@
 {
     public class GetStats
     {
+        // GET /tickets/stats | Get statistics for all tickets.(admin)
     }
 }
