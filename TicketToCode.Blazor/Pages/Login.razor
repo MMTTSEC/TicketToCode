@@ -1,97 +1,96 @@
 ﻿@page "/login"
+@inject NavigationManager nav
+@inject HttpClient http
 
 <PageTitle>Login/Register</PageTitle>
-
-<!-- Without Blazor Form Validation -->
-<!-- <div id="login">
-<h1>Login</h1>
-<form method="POST" action="/auth/login">
-<input type="text" id="uname" name="uname" placeholder="Username" required />
-<input type="password" id="upass" name="upass" placeholder="Password" minlength="8" required />
-<button type="submit">Login</button>
-</form>
-</div>
-
-<div id="register">
-<h1>Register</h1>
-<form method="POST" action="/auth/register">
-<input type="text" id="reguname" name="reguname" placeholder="Username" required />
-<input type="password" id="regupass" name="regupass" @bind="Password" @bind:event="oninput" placeholder="Password" minlength="8" required />
-<input type="password" id="regurepass" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
-@if (PasswordMatches) { } else { <span class="error">Passwords doesn't match.</span> }
-<button type="submit" @onclick="DoesPasswordsMatch">Register</button>
-</form>
-</div> -->
 
 <!-- With Blazor Form Validation -->
 <div id="login">
     <h1>Login</h1>
-    <EditForm Model=@LoginForms OnSubmit="@LoginFormSubmitted">
-        <input type="text" id="uname" name="uname" placeholder="Username" required />
-        <input type="password" id="upass" name="upass" placeholder="Password" minlength="8" required />
+    <EditForm Model=@LoginForms OnValidSubmit="@LoginFormMethod">
+        <input type="text" id="uname" name="uname" placeholder="Username" @bind-value="LoginForms.uname" required />
+        <input type="password" id="upass" name="upass" placeholder="Password" @bind-value="LoginForms.upass" minlength="8" required />
         <button type="submit">Login</button>
     </EditForm>
 </div>
 
 <div id="register">
     <h1>Register</h1>
-    <EditForm Model=@RegisterForms OnSubmit="@RegisterFormSubmitted">
-        <input type="text" id="reguname" name="reguname" placeholder="Username" required />
-        <input type="password" id="regupass" style="@PasswordErrorStyle" name="regupass" @bind="Password" @bind:event="oninput" placeholder="Password" minlength="8" required />
+    <EditForm Model=@RegisterForms OnValidSubmit="@RegisterFormMethod">
+        <input type="text" id="reguname" name="reguname" @bind-value="RegisterForms.regname" placeholder="Username" required />
+        <input type="password" id="regupass" style="@PasswordErrorStyle" name="regupass" @bind-value="RegisterForms.regpass" @bind-value:event="oninput" placeholder="Password" minlength="8" required />
         <input type="password" id="regurepass" style="@PasswordErrorStyle" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
-        @if (!PasswordMatches && Password != "" && RePassword != "") { <span class="error">Passwords doesn't match.</span> }
+        @if (!PasswordMatches && RePassword != "") { <span class="error">Passwords doesn't match.</span> }
         <button type="submit" @onclick="DoesPasswordsMatch">Register</button>
     </EditForm>
 </div>
 <p>
-    @if (LoginFormStatus != "Not submitted")
-    {
-        <span class="success">@LoginFormStatus</span>
-    }
-    else
-    {
-        <span class="warning">@LoginFormStatus</span>
-    }  | 
-    @if (RegisterFormStatus != "Not submitted")
+    @if (RegisterFormStatus != "")
     {
         <span class="success">@RegisterFormStatus</span> 
-    } else {
-        <span class="warning">@RegisterFormStatus</span>
     }
 </p>
 
 @code {
-    string LoginFormStatus = "Not submitted";
-    string RegisterFormStatus = "Not submitted";
+    // Variables
+    string RegisterFormStatus = "";
 
-    public string Password = "";
     public string RePassword = "";
     public string PasswordErrorStyle = "";
-    private bool PasswordMatches;
 
-    private void DoesPasswordsMatch() 
+    private bool PasswordMatches;
+    private bool RegisterValidationComplete = false;
+    
+    // Login & Register Objects
+    LoginForm LoginForms = new LoginForm();
+    RegisterForm RegisterForms = new RegisterForm();
+
+    public class LoginForm
     {
-        if(Password == RePassword) {
+        public string uname = "";
+        public string upass = "";
+    }
+
+    public class RegisterForm
+    {
+        public string regname = "";
+        public string regpass = "";
+    }
+
+    // Login & Register Methods
+    private void DoesPasswordsMatch()
+    {
+        if (RegisterForms.regpass == RePassword)
+        {
             PasswordMatches = true;
             PasswordErrorStyle = "";
-        } else {
+        }
+        else
+        {
             PasswordMatches = false;
             PasswordErrorStyle = "border: 1px solid red; color: red;";
         }
     }
-    LoginForm LoginForms = new LoginForm();
-    RegisterForm RegisterForms = new RegisterForm();
 
-    public class LoginForm {}
-    public class RegisterForm {}
-
-    void LoginFormSubmitted() {
-        LoginFormStatus = "Login Form Submitted";
+    void LoginFormMethod() {
+        // Send Login POST Request to /auth/login
+        //http.PostAsJsonAsync("https://localhost:7206/auth/login", LoginForms);
+        nav.NavigateTo("/");
     }
-    void RegisterFormSubmitted()
+    void RegisterFormMethod()
     {
+
         if(PasswordMatches) {
-            RegisterFormStatus = "Register Form Submitted";
+            RegisterValidationComplete = true;
+        } else {
+            RegisterValidationComplete = false;
+        }
+
+        if(RegisterValidationComplete) {
+            RegisterFormStatus = "User Successfully Registered";
+            // Send Register POST Request to /auth/register
+            //http.PostAsJsonAsync("https://localhost:7206/auth/register", RegisterForms);
+            nav.NavigateTo("/login");
         }
     }
 }
