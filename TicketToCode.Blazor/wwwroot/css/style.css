@@ -31,11 +31,12 @@ article form {
 article form input {
     margin-bottom: 10px;
     padding: 5px;
+    border: 1px solid darkgray;
 }
 
     article form button {
         background-color: rgb(66 166 237);
-        border: 2px solid rgb(59 149 213);
+        border: 2px solid rgb(66 166 237);
         color: white;
         padding: 7px 10px 5px;
         text-transform: uppercase;

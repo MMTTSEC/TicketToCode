@@ -37,9 +37,9 @@
     <h1>Register</h1>
     <EditForm Model=@RegisterForms OnSubmit="@RegisterFormSubmitted">
         <input type="text" id="reguname" name="reguname" placeholder="Username" required />
-        <input type="password" id="regupass" name="regupass" @bind="Password" @bind:event="oninput" placeholder="Password" minlength="8" required />
-        <input type="password" id="regurepass" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
-        @if (!PasswordMatches && Password != "" && RePassword != "") { <span class="error">Passwords doesn't match.</span> } else { }
+        <input type="password" id="regupass" style="@PasswordErrorStyle" name="regupass" @bind="Password" @bind:event="oninput" placeholder="Password" minlength="8" required />
+        <input type="password" id="regurepass" style="@PasswordErrorStyle" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
+        @if (!PasswordMatches && Password != "" && RePassword != "") { <span class="error">Passwords doesn't match.</span> }
         <button type="submit" @onclick="DoesPasswordsMatch">Register</button>
     </EditForm>
 </div>
@@ -66,14 +66,17 @@
 
     public string Password = "";
     public string RePassword = "";
+    public string PasswordErrorStyle = "";
     private bool PasswordMatches;
 
     private void DoesPasswordsMatch() 
     {
         if(Password == RePassword) {
             PasswordMatches = true;
+            PasswordErrorStyle = "";
         } else {
             PasswordMatches = false;
+            PasswordErrorStyle = "border: 1px solid red; color: red;";
         }
     }
     LoginForm LoginForms = new LoginForm();
