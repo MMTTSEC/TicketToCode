@@ -1,0 +1,96 @@
+﻿@page "/login"
+@inject NavigationManager nav
+@inject HttpClient http
+
+<PageTitle>Login/Register</PageTitle>
+
+<!-- With Blazor Form Validation -->
+<div id="login">
+    <h1>Login</h1>
+    <EditForm Model=@LoginForms OnValidSubmit="@LoginFormMethod">
+        <input type="text" id="uname" name="uname" placeholder="Username" @bind-value="LoginForms.uname" required />
+        <input type="password" id="upass" name="upass" placeholder="Password" @bind-value="LoginForms.upass" minlength="8" required />
+        <button type="submit">Login</button>
+    </EditForm>
+</div>
+
+<div id="register">
+    <h1>Register</h1>
+    <EditForm Model=@RegisterForms OnValidSubmit="@RegisterFormMethod">
+        <input type="text" id="reguname" name="reguname" @bind-value="RegisterForms.regname" placeholder="Username" required />
+        <input type="password" id="regupass" style="@PasswordErrorStyle" name="regupass" @bind-value="RegisterForms.regpass" @bind-value:event="oninput" placeholder="Password" minlength="8" required />
+        <input type="password" id="regurepass" style="@PasswordErrorStyle" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
+        @if (!PasswordMatches && RePassword != "") { <span class="error">Passwords doesn't match.</span> }
+        <button type="submit" @onclick="DoesPasswordsMatch">Register</button>
+    </EditForm>
+</div>
+<p>
+    @if (RegisterFormStatus != "")
+    {
+        <span class="success">@RegisterFormStatus</span> 
+    }
+</p>
+
+@code {
+    // Variables
+    string RegisterFormStatus = "";
+
+    public string RePassword = "";
+    public string PasswordErrorStyle = "";
+
+    private bool PasswordMatches;
+    private bool RegisterValidationComplete = false;
+    
+    // Login & Register Objects
+    LoginForm LoginForms = new LoginForm();
+    RegisterForm RegisterForms = new RegisterForm();
+
+    public class LoginForm
+    {
+        public string uname = "";
+        public string upass = "";
+    }
+
+    public class RegisterForm
+    {
+        public string regname = "";
+        public string regpass = "";
+    }
+
+    // Login & Register Methods
+    private void DoesPasswordsMatch()
+    {
+        if (RegisterForms.regpass == RePassword)
+        {
+            PasswordMatches = true;
+            PasswordErrorStyle = "";
+        }
+        else
+        {
+            PasswordMatches = false;
+            PasswordErrorStyle = "border: 1px solid red; color: red;";
+        }
+    }
+
+    void LoginFormMethod() {
+        // Send Login POST Request to /auth/login
+        //http.PostAsJsonAsync("https://localhost:7206/auth/login", LoginForms);
+        nav.NavigateTo("/");
+    }
+    void RegisterFormMethod()
+    {
+
+        if(PasswordMatches) {
+            RegisterValidationComplete = true;
+        } else {
+            RegisterValidationComplete = false;
+        }
+
+        if(RegisterValidationComplete) {
+            RegisterFormStatus = "User Successfully Registered";
+            // Send Register POST Request to /auth/register
+            //http.PostAsJsonAsync("https://localhost:7206/auth/register", RegisterForms);
+            nav.NavigateTo("/login");
+        }
+    }
+}
