@@ -8,12 +8,18 @@
     <p>There are currently no events available.</p>
 } else {
     <section id="events-wrapper">
-    @foreach (var eventItem in events) {
-        <div id="event-@eventItem.Id" class="event-card">
-            <h2>@eventItem.Name</h2>
-            <p>@eventItem.Description</p>
-        </div>
-    }
+        @foreach (var eventItem in events) {
+            <div id="event-@eventItem.Id" class="event-card">
+                <h2>@eventItem.Name <span class="event-type">@eventItem.Type</span></h2>
+                <p class="event-date"><span class="event-start">@eventItem.StartTime</span> - <span class="event-end">@eventItem.EndTime</span></p>
+                <p class="event-description">@eventItem.Description</p>
+                <p class="event-attendees">@eventItem.MaxAttendees</p>
+                <div class="event-buttons-wrapper">
+                    <button class="event-button">@eventItem.Type Page</button>
+                    <button class="event-button">Book Ticket</button>
+                </div>
+            </div>
+        }
     </section>
 }
 
@@ -22,17 +28,29 @@
 
     // Temporary event data
     List<Event> events = new List<Event> {
-        new Event { Id = 1, Name = "Event 1", Description = "Event 1 Description" },
-        new Event { Id = 2, Name = "Event 2", Description = "Event 2 Description" },
-        new Event { Id = 3, Name = "Event 3", Description = "Event 3 Description" },
-        new Event { Id = 4, Name = "Event 4", Description = "Event 4 Description" },
-        new Event { Id = 5, Name = "Event 5", Description = "Event 5 Description" }
+        new Event { Id = 1, Name = "Event 1", Description = "Event 1 Description", Type = EventType.Concert, StartTime = DateTime.Parse("2025-04-01 18:00"), EndTime = DateTime.Parse("2025-04-01 21:00"), MaxAttendees = 100 },
+        new Event { Id = 2, Name = "Event 2", Description = "Event 2 Description", Type = EventType.Festival, StartTime = DateTime.Parse("2025-04-02 18:00"), EndTime = DateTime.Parse("2025-04-04 18:00"), MaxAttendees = 3300 },
+        new Event { Id = 3, Name = "Event 3", Description = "Event 3 Description", Type = EventType.Concert, StartTime = DateTime.Parse("2025-04-03 18:00"), EndTime = DateTime.Parse("2025-04-04 00:00"), MaxAttendees = 1000 },
+        new Event { Id = 4, Name = "Event 4", Description = "Event 4 Description", Type = EventType.Theatre, StartTime = DateTime.Parse("2025-04-04 18:00"), EndTime = DateTime.Parse("2025-04-04 20:00"), MaxAttendees = 400 },
+        new Event { Id = 5, Name = "Event 5", Description = "Event 5 Description", Type = EventType.Other, StartTime = DateTime.Parse("2025-04-05 18:00"), EndTime = DateTime.Parse("2025-04-05 19:30"), MaxAttendees = 20 }
     };
 
     public class Event
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Name { get; set; } = "New event";
+        public string Description { get; set; } = string.Empty;
+        public EventType Type { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public int MaxAttendees { get; set; }
+    }
+
+    public enum EventType
+    {
+        Concert = 0,
+        Festival,
+        Theatre,
+        Other
     }
 }
