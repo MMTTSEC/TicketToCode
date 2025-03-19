@@ -4,4 +4,35 @@
 
 <h1>Events</h1>
 
-There are currently no events available.
+@if (!EventsAvailable) {
+    <p>There are currently no events available.</p>
+} else {
+    <section id="events-wrapper">
+    @foreach (var eventItem in events) {
+        <div id="event-@eventItem.Id" class="event-card">
+            <h2>@eventItem.Name</h2>
+            <p>@eventItem.Description</p>
+        </div>
+    }
+    </section>
+}
+
+@code {
+    public bool EventsAvailable = true;
+
+    // Temporary event data
+    List<Event> events = new List<Event> {
+        new Event { Id = 1, Name = "Event 1", Description = "Event 1 Description" },
+        new Event { Id = 2, Name = "Event 2", Description = "Event 2 Description" },
+        new Event { Id = 3, Name = "Event 3", Description = "Event 3 Description" },
+        new Event { Id = 4, Name = "Event 4", Description = "Event 4 Description" },
+        new Event { Id = 5, Name = "Event 5", Description = "Event 5 Description" }
+    };
+
+    public class Event
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+    }
+}
