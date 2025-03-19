@@ -17,8 +17,8 @@
 <div id="register">
     <h1>Register</h1>
     <EditForm Model=@RegisterForms OnValidSubmit="@RegisterFormMethod">
-        <input type="text" id="reguname" name="reguname" @bind-value="RegisterForms.regname" placeholder="Username" required />
-        <input type="password" id="regupass" style="@PasswordErrorStyle" name="regupass" @bind-value="RegisterForms.regpass" @bind-value:event="oninput" placeholder="Password" minlength="8" required />
+        <input type="text" id="reguname" name="reguname" @bind-value="RegisterForms.username" placeholder="Username" required />
+        <input type="password" id="regupass" style="@PasswordErrorStyle" name="regupass" @bind-value="RegisterForms.password" @bind-value:event="oninput" placeholder="Password" minlength="8" required />
         <input type="password" id="regurepass" style="@PasswordErrorStyle" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
         @if (!PasswordMatches && RePassword != "") { <span class="error">Passwords doesn't match.</span> }
         <button type="submit" @onclick="DoesPasswordsMatch">Register</button>
@@ -53,14 +53,14 @@
 
     public class RegisterForm
     {
-        public string regname = "";
-        public string regpass = "";
+        public string username = "";
+        public string password = "";
     }
 
     // Login & Register Methods
     private void DoesPasswordsMatch()
     {
-        if (RegisterForms.regpass == RePassword)
+        if (RegisterForms.password == RePassword)
         {
             PasswordMatches = true;
             PasswordErrorStyle = "";
@@ -74,7 +74,7 @@
 
     void LoginFormMethod() {
         // Send Login POST Request to /auth/login
-        //http.PostAsJsonAsync("https://localhost:7206/auth/login", LoginForms);
+        http.PostAsJsonAsync("https://localhost:7206/auth/login", LoginForms);
         nav.NavigateTo("/");
     }
     void RegisterFormMethod()
@@ -89,7 +89,7 @@
         if(RegisterValidationComplete) {
             RegisterFormStatus = "User Successfully Registered";
             // Send Register POST Request to /auth/register
-            //http.PostAsJsonAsync("https://localhost:7206/auth/register", RegisterForms);
+            http.PostAsJsonAsync("https://localhost:7206/auth/register", RegisterForms);
             nav.NavigateTo("/login");
         }
     }
