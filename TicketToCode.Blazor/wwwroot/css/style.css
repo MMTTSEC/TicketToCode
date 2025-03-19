@@ -51,7 +51,7 @@ article form button:hover {
 }
 
 /* Validation Stylings */
-span.success, span.warning, span.error, span.working {
+span, span.success, span.warning, span.error, span.working {
     font-size: 12px;
     padding-bottom: 10px;
     text-align: center;
