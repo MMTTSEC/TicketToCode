@@ -74,3 +74,21 @@ span.working {
 }
 
 /* Homepage */
+article section#events-wrapper {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+article section#events-wrapper .event-card {
+    min-width: 400px;
+    border: 2px solid #591487;
+    padding: 20px;
+    margin: 15px;
+    background-color: rgb(20 20 22);
+    background: repeating-linear-gradient( 45deg,#0000 calc(-650%/13) calc(50%/13),rgba(45, 38, 63, 0.95) 0 calc(100%/13), #0000 0 calc(150%/13),rgba(45, 38, 63, 0.95) 0 calc(200%/13), #0000 0 calc(250%/13),rgba(45, 38, 63, 0.95) 0 calc(300%/13)),repeating-linear-gradient( 45deg,#0000 calc(-650%/13) calc(50%/13),rgba(45, 38, 63, 0.95) 0 calc(100%/13), #0000 0 calc(150%/13),rgba(45, 38, 63, 0.95) 0 calc(200%/13), #0000 0 calc(250%/13),rgba(45, 38, 63, 0.95) 0 calc(300%/13)) 32px 32px, repeating-linear-gradient(-45deg,#0000 calc(-650%/13) calc(50%/13),rgba(45, 38, 63, 0.95) 0 calc(100%/13), #0000 0 calc(150%/13),rgba(45, 38, 63, 0.95) 0 calc(200%/13), #0000 0 calc(250%/13),rgba(45, 38, 63, 0.95) 0 calc(300%/13)),repeating-linear-gradient(-45deg,#0000 calc(-650%/13) calc(50%/13),rgba(45, 38, 63, 0.95) 0 calc(100%/13), #0000 0 calc(150%/13),rgba(45, 38, 63, 0.95) 0 calc(200%/13), #0000 0 calc(250%/13),rgba(45, 38, 63, 0.95) 0 calc(300%/13)) 32px 32px rgba(10, 9, 9, 0.95);
+    background-size: 64px 64px;
+    color: white;
+    box-shadow: 0px 0px 5px inset white;
+}
