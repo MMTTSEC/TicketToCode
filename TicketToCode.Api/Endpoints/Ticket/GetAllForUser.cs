@@ -1,7 +1,64 @@
-﻿namespace TicketToCode.Api.Endpoints.Ticket
+﻿using System.Reflection.Metadata;
+
+namespace TicketToCode.Api.Endpoints.Ticket
 {
-    public class GetAllForUser
+    public class GetAllForUser : IEndpoint
     {
-        // GET /tickets/my-tickets | Get all tickets for the authenticated user.
+        // Mapping
+        public static void MapEndpoint(IEndpointRouteBuilder app) => app
+        .MapGet("/tickets/my-tickets", Handle)
+        .WithSummary("Get all tickets for the authenticated user");
+        //.RequireAuthorization();
+
+        public record Response(int TicketId, int EventId, string EventName, DateTime EventStart, DateTime EventEnd);
+
+        // Logic
+        // Logic
+        private static Results<Ok<List<Response>>, BadRequest<string>> Handle(
+            IDatabase db,
+            HttpContext context)
+        {
+            int userId = 1; // Temporary hardcoded user ID for testing
+
+            /*
+            // Removed authentication logic for testing
+            var authCookie = context.Request.Cookies["auth"];
+            if (string.IsNullOrEmpty(authCookie))
+            {
+                return TypedResults.BadRequest("User not authenticated");
+            }
+            var username = authCookie.Split(':')[0];
+            var user = db.Users.FirstOrDefault(u => u.Username == username);
+            if (user == null)
+            {
+                return TypedResults.BadRequest("User not found");
+            }
+            */
+
+            // Get all tickets for the hardcoded user and map to response
+            var userTickets = db.Tickets
+                .Where(t => t.UserID == userId) 
+                .Select(t =>
+                {
+                    var ev = db.Events.FirstOrDefault(e => e.Id == t.EventID); 
+                    if (ev == null)
+                    {
+                        // Handle case where event might not exist
+                        return null;
+                    }
+                    return new Response(
+                        TicketId: t.ID,
+                        EventId: t.EventID,
+                        EventName: ev.Name,
+                        EventStart: ev.StartTime,
+                        EventEnd: ev.EndTime
+                    );
+                })
+                .Where(r => r != null) // Filter out null responses
+                .ToList();
+
+
+            return TypedResults.Ok(userTickets);
+        }
     }
 }
