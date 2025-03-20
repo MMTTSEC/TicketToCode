@@ -175,7 +175,7 @@ article section#events-wrapper p.noEventsFound {
     font-size: 24px;
 }
 
-.event-card .event-buttons-wrapper button {
+.event-card .event-buttons-wrapper button.event-button {
     background-image: radial-gradient(rgba(62, 32, 81, 0.9) 2px, transparent 2px), radial-gradient(rgba(62, 32, 81, 0.9) 2px, transparent 2px);
     background-size: 10px 10px;
     background-position: 0 0, 5px 5px;
@@ -197,7 +197,30 @@ article section#events-wrapper p.noEventsFound {
     transition: 0.2s ease-in-out;
 }
 
-.event-card .event-buttons-wrapper button:hover {
+.event-card .event-buttons-wrapper button.event-button:hover {
     border: 1px solid #b55cef;
     box-shadow: 0px 0px 15px #b55cef;
+}
+
+.event-card .event-buttons-wrapper button.event-button-closed {
+    background-image: radial-gradient(rgba(26, 3, 9, 0.9) 2px, transparent 2px), radial-gradient(rgba(26, 3, 9, 0.9) 2px, transparent 2px);
+    background-size: 10px 10px;
+    background-position: 0 0, 5px 5px;
+    background-color: rgba(53, 9, 20, 0.9);
+    width: 200px;
+    padding: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 2px;
+    font-size: 18px;
+    font-family: monospace;
+    border: none;
+    color: red;
+    border: 1px dashed red;
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 5px red;
+    transition: 0.2s ease-in-out;
+    pointer-events: none;
 }

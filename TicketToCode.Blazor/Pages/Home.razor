@@ -23,7 +23,7 @@
                             / @eventItem.MaxAttendees</span><br />Tickets Remaining
                     </p>
                     <div class="event-buttons-wrapper">
-                        <button class="event-button">Book Ticket</button>
+                        <button class="@(eventItem.RemainingSeats == 0 ? "event-button-closed" : "event-button")">@(eventItem.RemainingSeats == 0 ? "Fully Booked" : "Book Ticket")</button>
                     </div>
                 </div>
             }
