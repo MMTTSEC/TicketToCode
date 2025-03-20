@@ -3,31 +3,40 @@
 <PageTitle>Home</PageTitle>
 
 <h1>Events</h1>
+<input class="search" type="text" @bind="SearchQuery" @bind:event="oninput" @bind:after="Search" placeholder="Search..."/>
 
 @if (!EventsAvailable) {
-    <p>There are currently no events available.</p>
+    <p class="noEventsFound">There are currently no events available.</p>
 } else {
     <section id="events-wrapper">
         @foreach (var eventItem in events) {
-            <div id="event-@eventItem.Id" class="event-card">
-                <h2>@eventItem.Name <span class="event-type">@eventItem.Type</span></h2>
-                <p class="event-description">@eventItem.Description</p>
-                <p class="event-date"><span class="event-start">Event Start: @eventItem.StartTime</span><br /> <span class="event-end">Event End: @eventItem.EndTime</span></p>
-                <p class="event-attendees">
-                    <span class="@(eventItem.RemainingSeats == 0 ? "error" : (eventItem.RemainingSeats < (eventItem.MaxAttendees / 2)) ? "warning" : "success")">
-                        @eventItem.RemainingSeats
-                    / @eventItem.MaxAttendees</span><br />Tickets Remaining
-                </p>
-                <div class="event-buttons-wrapper">
-                    <button class="event-button">Book Ticket</button>
+            if (eventItem.Name.ToUpper().Contains(SearchQuery.ToUpper()))
+            {
+                SearchResultsFound++;
+                <div id="event-@eventItem.Id" class="event-card">
+                    <h2>@eventItem.Name <span class="event-type">@eventItem.Type</span></h2>
+                    <p class="event-description">@eventItem.Description</p>
+                    <p class="event-date"><span class="event-start">Event Start: @eventItem.StartTime</span><br /> <span class="event-end">Event End: @eventItem.EndTime</span></p>
+                    <p class="event-attendees">
+                        <span class="@(eventItem.RemainingSeats == 0 ? "error" : (eventItem.RemainingSeats < (eventItem.MaxAttendees / 2)) ? "warning" : "success")">
+                            @eventItem.RemainingSeats
+                            / @eventItem.MaxAttendees</span><br />Tickets Remaining
+                    </p>
+                    <div class="event-buttons-wrapper">
+                        <button class="event-button">Book Ticket</button>
+                    </div>
                 </div>
-            </div>
+            }
+        }
+        @if (SearchResultsFound == 0) {
+            <p class="noEventsFound">No events found...</p>
         }
     </section>
 }
-
 @code {
     public bool EventsAvailable = true;
+    public int SearchResultsFound = 0;
+    public string SearchQuery = "";
 
     // Temporary event data
     List<Event> events = new List<Event> {
@@ -57,5 +66,9 @@
         Festival,
         Theatre,
         Other
+    }
+
+    void Search() {
+        SearchResultsFound = 0;
     }
 }
