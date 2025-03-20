@@ -1,4 +1,15 @@
-﻿/* General Blazor Page Styling */
+﻿/* Top Row */
+.top-row {
+    justify-content: space-between !important;
+}
+
+.top-row .admin-links {
+    color: #b55cef;
+    margin-left: 0 !important;
+    margin-right: 1.5rem;
+}
+
+/* General Blazor Page Styling */
 h1 {
     color: rgba(77, 41, 101, 0.7);
     margin-top: 40px;
