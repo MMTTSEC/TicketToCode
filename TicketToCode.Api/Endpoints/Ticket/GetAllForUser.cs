@@ -21,7 +21,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
            
 
             
-            //  authentication l
+            //  authentication 
             var authCookie = context.Request.Cookies["auth"];
             if (string.IsNullOrEmpty(authCookie))
             {
@@ -35,7 +35,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
             }
             
 
-            // Get all tickets for the hardcoded user and map to response
+            // Get all tickets 
             var userTickets = db.Tickets
                 .Where(t => t.UserID == user.Id) 
                 .Select(t =>
