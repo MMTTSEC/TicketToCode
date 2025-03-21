@@ -120,6 +120,7 @@ article section#events-wrapper {
 }
 
 article section#events-wrapper .event-card {
+    position: relative;
     min-width: 300px;
     max-width: 350px;
     border: 2px solid #591487;
@@ -234,4 +235,41 @@ article section#events-wrapper p.noEventsFound {
     box-shadow: 0px 0px 5px red;
     transition: 0.2s ease-in-out;
     pointer-events: none;
+}
+
+/* Admin Stuff */
+.event-card div.admin-options {
+    position: absolute;
+    top: -14px;
+    right: 20px;
+}
+
+.event-card div.admin-options a {
+    text-decoration: none;
+}
+
+.event-card div.admin-options a span {
+    background-color: #230737;
+    padding: 7px 7px;
+    border: 1px solid #591487;
+}
+
+.event-card div.admin-options a span:hover {
+    color: #591487;
+}
+
+.crud-create {
+    color: green;
+}
+
+.crud-read {
+    color: blue;
+}
+
+.crud-update {
+    color: orange;
+}
+
+.crud-delete {
+    color: red;
 }
