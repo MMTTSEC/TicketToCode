@@ -1,0 +1,65 @@
+﻿@page "/createevent"
+@inject NavigationManager nav
+@inject HttpClient http
+
+<h1>Create New Event</h1>
+
+<div id="createevent">
+    <EditForm Model=@EventForms OnValidSubmit="@CreateEventFormMethod">
+        <input type="text" id="ename" name="ename" placeholder="Event Name" @bind-value="EventForms.eName" maxlength="35" required />
+        <textarea id="edesc" name="edesc" placeholder="Event Description..." @bind="EventForms.eDesc" maxlength="300" rows="5" style="resize: none;" required></textarea>
+        <label for="etype">Event Start Date</label>
+        <select id="etype "name="etype" @bind="EventForms.eType">
+            @foreach (var type in Enum.GetValues(typeof(EventType))) {
+                <option value="@type">@type</option>
+            }
+        </select>
+        <label for="estarttime">Event Start Date</label>
+        <input type="datetime-local" id="estarttime" name="estarttime" @bind-value="EventForms.eStartTime" min="@CurrentTime" required />
+        <label for="estarttime">Event End Date</label>
+        <input type="datetime-local" id="eendtime" name="eendtime" @bind-value="EventForms.eEndTime" min="@EventForms.eStartTime" required />
+        <input type="number" id="emaxattendees" name="emaxattendees" @bind-value="EventForms.eMaxAttendees" min="20" max="5000" required />
+        <button type="submit">Create Event</button>
+    </EditForm>
+</div>
+@if (CreateEventFormStatus != "")
+{
+    <p><span class="success">@CreateEventFormStatus</span></p>
+}
+
+@code {
+    // Variables
+    public string CreateEventFormStatus = "";
+    public DateTime CurrentTime = new DateTime(DateTime.Now.Ticks / 600000000 * 600000000);
+
+    // Create New Event Object
+    EventForm EventForms = new EventForm();
+
+    public class EventForm
+    {
+        public string eName = "";
+        public string eDesc = "";
+        public EventType eType { get; set; }
+        public DateTime eStartTime { get; set; } = new DateTime(DateTime.Now.Ticks / 600000000 * 600000000);
+        public DateTime eEndTime { get; set; } = new DateTime(DateTime.Now.Ticks / 600000000 * 600000000);
+        public int eBookings { get; set; } = 0;
+        public int eMaxAttendees { get; set; } = 20;
+    }
+
+    public enum EventType
+    {
+        Concert = 0,
+        Festival,
+        Theatre,
+        Other
+    }
+
+    // Create Event Methods
+    void CreateEventFormMethod()
+    {
+        CreateEventFormStatus = "Event Successfully Created";
+        // Send Create Event POST Request to /auth/login
+        //http.PostAsJsonAsync("https://localhost:7206/auth/login", new { name = EventForms.eName, description = EventForms.eDesc, type = EventForms.eType , starttime = EventForms.eStartTime, endtime = EventForms.eEndTime, bookings = EventForms.eBookings, maxattendees = EventForms.eMaxAttendees });
+        nav.NavigateTo("/?EventCreated=true&EventName="+EventForms.eName);
+    }
+}

@@ -41,11 +41,16 @@ article form {
     flex-direction: column;
 }
 
-article form input {
+article form input, article form textarea, article form select {
     margin-bottom: 10px;
     padding: 5px;
     border: 1px solid rgba(77, 41, 101, 0.5);
 }
+
+    article form input:focus-visible, article form textarea:focus-visible, article form select:focus-visible {
+        outline: 1px solid #591487;
+        border-radius: 5px;
+    }
 
 article form button {
     background-size: 10px 10px;

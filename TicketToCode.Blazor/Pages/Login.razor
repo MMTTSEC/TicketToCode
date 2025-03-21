@@ -24,12 +24,10 @@
         <button type="submit" @onclick="DoesPasswordsMatch">Register</button>
     </EditForm>
 </div>
-<p>
-    @if (RegisterFormStatus != "")
-    {
-        <span class="success">@RegisterFormStatus</span> 
-    }
-</p>
+@if (RegisterFormStatus != "")
+{
+    <p><span class="success">@RegisterFormStatus</span></p>
+}
 
 @code {
     // Variables
