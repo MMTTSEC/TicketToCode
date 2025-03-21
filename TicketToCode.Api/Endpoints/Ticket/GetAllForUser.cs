@@ -12,16 +12,16 @@ namespace TicketToCode.Api.Endpoints.Ticket
 
         public record Response(int TicketId, int EventId, string EventName, DateTime EventStart, DateTime EventEnd);
 
-        // Logic
+        
         // Logic
         private static Results<Ok<List<Response>>, BadRequest<string>> Handle(
             IDatabase db,
             HttpContext context)
         {
-            int userId = 1; // Temporary hardcoded user ID for testing
+           
 
-            /*
-            // Removed authentication logic for testing
+            
+            //  authentication l
             var authCookie = context.Request.Cookies["auth"];
             if (string.IsNullOrEmpty(authCookie))
             {
@@ -33,11 +33,11 @@ namespace TicketToCode.Api.Endpoints.Ticket
             {
                 return TypedResults.BadRequest("User not found");
             }
-            */
+            
 
             // Get all tickets for the hardcoded user and map to response
             var userTickets = db.Tickets
-                .Where(t => t.UserID == userId) 
+                .Where(t => t.UserID == user.Id) 
                 .Select(t =>
                 {
                     var ev = db.Events.FirstOrDefault(e => e.Id == t.EventID); 
