@@ -8,31 +8,29 @@
             .WithSummary("Get all tickets for an event.(admin)");
         //.RequireAuthorization();
 
-
         // Request and Response types
-        public record Request(int EventId); 
+        public record Request(int EventId);
         public record Response(int TicketId, int UserId, string Username);
 
-        //Logic
-        private static Results<Ok<List<Response>>, NotFound<string>> Handle(
-        [AsParameters] Request request,
-        IDatabase db)
+        // Logic
+        private static Results<Ok<List<Response>>, NotFound<string>, BadRequest<string>> Handle(
+            [AsParameters] Request request,
+            IDatabase db,
+            HttpContext context)
         {
-            /*
-       // Authentication check commented out for testing
-       var authCookie = context.Request.Cookies["auth"];
-       if (string.IsNullOrEmpty(authCookie))
-       {
-           return TypedResults.BadRequest("User not authenticated");
-       }
-       var username = authCookie.Split(':')[0];
-       var role = authCookie.Split(':')[1];
-       var user = db.Users.FirstOrDefault(u => u.Username == username);
-       if (user == null || role != "Admin")
-       {
-           return TypedResults.BadRequest("Admin access required");
-       }
-       */
+            // Authentication check
+            var authCookie = context.Request.Cookies["auth"];
+            if (string.IsNullOrEmpty(authCookie))
+            {
+                return TypedResults.BadRequest("User not authenticated");
+            }
+            var username = authCookie.Split(':')[0];
+            var role = authCookie.Split(':')[1];
+            var user = db.Users.FirstOrDefault(u => u.Username == username);
+            if (user == null || role != "Admin")
+            {
+                return TypedResults.BadRequest("Admin access required");
+            }
 
             // Check if the event exists
             var eventExists = db.Events.Any(e => e.Id == request.EventId);

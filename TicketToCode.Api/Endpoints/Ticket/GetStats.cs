@@ -21,10 +21,10 @@
             IDatabase db,
             HttpContext context)
         {
-            int userId = 1; //  hardcoded user 
+           
 
-            /*
-            // Authentication check commented out for testing
+            
+            // Authentication check 
             var authCookie = context.Request.Cookies["auth"];
             if (string.IsNullOrEmpty(authCookie))
             {
@@ -37,7 +37,7 @@
             {
                 return TypedResults.BadRequest("Admin access required");
             }
-            */
+            
 
             // Calculate ticket statistics
             var totalTickets = db.Tickets.Count;
