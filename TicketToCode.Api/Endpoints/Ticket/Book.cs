@@ -9,7 +9,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapPost("/tickets/book", Handle)
             .WithSummary("Book a ticket for an event");
-            //.RequireAuthorization(); 
+           // .RequireAuthorization(); 
 
         // Request and Response types
         public record Request([Required] int EventId); // Input validation
@@ -21,7 +21,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
             IDatabase db,
             HttpContext context)
         {
-            /* 1. Authentication check
+             // Authentication check
             var authCookie = context.Request.Cookies["auth"];
             if (authCookie is null) return TypedResults.Unauthorized();
 
@@ -30,7 +30,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
             var user = db.Users.FirstOrDefault(u => u.Username == username);
             if (user is null) return TypedResults.Unauthorized();
 
-            */
+            
 
             // 2. Event validation
             var ev = db.Events.FirstOrDefault(e => e.Id == request.EventId);
@@ -45,7 +45,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
             var newTicket = new TicketToCode.Core.Models.Ticket
             {
                 ID = db.Tickets.Any() ? db.Tickets.Max(t => t.ID) + 1 : 1,
-                UserID = 1, // temporary hardcoded user id until we have proper auth
+                UserID = user.Id,                                   // temporary hardcoded user id until we have proper auth
                 EventID = ev.Id
             };
 
