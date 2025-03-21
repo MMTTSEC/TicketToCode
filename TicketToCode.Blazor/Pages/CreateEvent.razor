@@ -1,0 +1,33 @@
+﻿@page "/createevent"
+@inject NavigationManager nav
+@inject HttpClient http
+
+<h1>Create New Event</h1>
+
+<div id="createevent">
+    <h1>Login</h1>
+    <EditForm Model=@EventForms OnValidSubmit="@CreateEventFormMethod">
+        <input type="text" id="uname" name="uname" placeholder="Username" @bind-value="EventForms.uname" required />
+        <input type="password" id="upass" name="upass" placeholder="Password" @bind-value="EventForms.upass" minlength="8" required />
+        <button type="submit">Login</button>
+    </EditForm>
+</div>
+
+@code {
+    // Create New Event Object
+    EventForm EventForms = new EventForm();
+
+    public class EventForm
+    {
+        public string uname = "";
+        public string upass = "";
+    }
+
+    // Create Event Methods
+    void CreateEventFormMethod()
+    {
+        // Send Create Event POST Request to /auth/login
+        //http.PostAsJsonAsync("https://localhost:7206/auth/login", new { username = EventForms.uname, password = EventForms.upass });
+        //nav.NavigateTo("/");
+    }
+}
