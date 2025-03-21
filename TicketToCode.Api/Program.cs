@@ -12,6 +12,19 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        // Use WithOrigins instead of AllowAnyOrigin
+        builder.WithOrigins("https://localhost:7205")  // The exact origin you want to allow
+               .AllowCredentials()                    // Allow credentials (cookies)
+               .AllowAnyHeader()                       // Allow any headers
+               .AllowAnyMethod();                      // Allow any HTTP method
+    });
+});
+
+
 // Add cookie authentication
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
@@ -20,16 +33,6 @@ builder.Services.AddAuthentication("Cookies")
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Strict;
     });
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-    });
-});
 
 builder.Services.AddAuthorization();
 
@@ -51,6 +54,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Middle Ware authentication
 app.UseAuthentication();
 app.UseAuthorization();
 
