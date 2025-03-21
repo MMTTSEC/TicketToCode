@@ -8,10 +8,10 @@ namespace TicketToCode.Api.Endpoints.Ticket
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapDelete("/tickets/{id}", Handle)
             .WithSummary("Cancel a ticket for an event for the authenticated user");
-        // .RequireAuthorization() 
+     
 
         // Request and Response models
-        public record Request(int Id); // Route parameter for ticket ID
+        public record Request(int Id); 
         public record Response(int TicketId);
 
         // Logic
@@ -20,9 +20,9 @@ namespace TicketToCode.Api.Endpoints.Ticket
             IDatabase db,
             HttpContext context)
         {
-            int userId = 1; // Temporary hardcoded user ID for testing
+            //int userId = 1; // Temporary hardcoded user ID for testing
 
-            /*
+            
             // Authentication check commented out for testing
             var authCookie = context.Request.Cookies["auth"];
             if (string.IsNullOrEmpty(authCookie))
@@ -35,10 +35,10 @@ namespace TicketToCode.Api.Endpoints.Ticket
             {
                 return TypedResults.BadRequest("User not found");
             }
-            */
+            
 
             // Find the ticket
-            var ticket = db.Tickets.FirstOrDefault(t => t.ID == request.Id && t.UserID == userId);
+            var ticket = db.Tickets.FirstOrDefault(t => t.ID == request.Id && t.UserID == user.Id);
             if (ticket == null)
             {
                 return TypedResults.NotFound($"Ticket with ID {request.Id} not found or does not belong to user");
