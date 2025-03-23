@@ -14,6 +14,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<ISort, SortService>();
+builder.Services.AddSingleton<IFilter, FilterService>();
 
 // Add cookie authentication
 builder.Services.AddAuthentication("Cookies")
