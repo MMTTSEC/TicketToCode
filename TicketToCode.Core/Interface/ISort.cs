@@ -9,6 +9,7 @@ namespace TicketToCode.Core.Interface
 {
     public interface ISort
     {
+        List<Event> SortByRemaniningTickets();
         List<Event> SortByStartTime();
     }
 }
