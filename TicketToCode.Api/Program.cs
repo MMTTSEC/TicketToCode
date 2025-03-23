@@ -1,6 +1,8 @@
 using TicketToCode.Api.Endpoints;
 using TicketToCode.Api.Services;
 using TicketToCode.Core.Data;
+using TicketToCode.Core.Interface;
+using TicketToCode.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,7 @@ builder.Services.AddOpenApi();
  
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<ISort, SortService>();
 
 // Add cookie authentication
 builder.Services.AddAuthentication("Cookies")
