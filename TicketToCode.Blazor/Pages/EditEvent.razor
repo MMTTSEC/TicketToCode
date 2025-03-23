@@ -1,0 +1,87 @@
+﻿@page "/editevent"
+@inject NavigationManager nav
+@inject HttpClient http
+
+<h1>Edit Event</h1>
+
+<div id="createevent">
+    <EditForm Model=@EventEditForms OnValidSubmit="@CreateEventFormMethod">
+        <input type="text" id="ename" name="ename" placeholder="Event Name" @bind-value="eventname" maxlength="35" required />
+        <textarea id="edesc" name="edesc" placeholder="Event Description..." @bind="eventdescription" maxlength="300" rows="5" style="resize: none;" required></textarea>
+        <label for="etype">Event Start Date</label>
+        <select id="etype " name="etype" @bind="eventtype">
+            @foreach (var type in Enum.GetValues(typeof(EventType)))
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+        <label for="estarttime">Event Start Date</label>
+        <input type="datetime-local" id="estarttime" name="estarttime" @bind-value="eventstarttime" min="@CurrentTime" required />
+        <label for="estarttime">Event End Date</label>
+        <input type="datetime-local" id="eendtime" name="eendtime" @bind-value="eventendtime" min="@eventstarttime" required />
+        <input type="number" id="emaxattendees" name="emaxattendees" @bind-value="eventmaxattendees" min="20" max="5000" required />
+        <button type="submit">Edit Event</button>
+    </EditForm>
+</div>
+@if (EditEventFormStatus != "")
+{
+    <p><span class="success">@EditEventFormStatus</span></p>
+}
+
+@code {
+    // Variables
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? eventid { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? eventname { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? eventdescription { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? eventtype { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public DateTime? eventstarttime { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public DateTime? eventendtime { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? eventmaxattendees { get; set; }
+
+    public string EditEventFormStatus = "";
+    public DateTime CurrentTime = new DateTime(DateTime.Now.Ticks / 600000000 * 600000000);
+
+    // Edit Event Object
+    EventEditForm EventEditForms = new EventEditForm();
+
+    public class EventEditForm
+    {
+
+    }
+
+    public enum EventType
+    {
+        Concert = 0,
+        Festival,
+        Theatre,
+        Other
+    }
+
+    // Edit Event Methods
+    void CreateEventFormMethod()
+    {
+        EditEventFormStatus = "Event Successfully Updated";
+        // Send Edit Event POST Request to /events/edit
+        //http.PostAsJsonAsync("https://localhost:7206/events/edit", new { id = eventid, name = eventname, description = eventdescription, type = eventtype , starttime = eventstarttime, endtime = eventendtime, maxattendees = eventmaxattendees });
+    }
+}
