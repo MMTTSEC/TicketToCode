@@ -1,0 +1,79 @@
+﻿@page "/mytickets"
+@inject NavigationManager nav
+@inject HttpClient http
+
+<h1>My Tickets</h1>
+@if (error != null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (tickets == null)
+{
+    <p>Loading...</p>
+}
+else if (!tickets.Any())
+{
+    <p>No tickets found.</p>
+}
+else
+{
+    <div class="container mt-4">
+        <div class="row g-4">
+            @foreach (var ticket in tickets)
+            {
+                <div class="col-md-6">
+                    <div class="ticket-card">
+                        <div class="ticket-header">@ticket.EventName</div>
+                        <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
+                        <p><strong>Event ID:</strong> @ticket.EventId</p>
+                        <p><strong>Start:</strong> @ticket.EventStart.ToString("yyyy-MM-dd HH:mm")</p>
+                        <p><strong>End:</strong> @ticket.EventEnd.ToString("yyyy-MM-dd HH:mm")</p>
+                        <div class="ticket-footer">🎟 Enjoy the event!</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+    
+@code {
+    private List<TicketResponse>? tickets;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/tickets/my-tickets");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            
+            // Add CORS headers
+            request.Headers.Add("Access-Control-Allow-Origin", "https://localhost:7205");
+            request.Headers.Add("Access-Control-Allow-Credentials", "true");
+            
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                tickets = await response.Content.ReadFromJsonAsync<List<TicketResponse>>();
+            }
+            else
+            {
+                error = $"Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Error fetching tickets: {ex.Message}";
+            Console.Error.WriteLine($"Error fetching tickets: {ex.Message}");
+        }
+    }
+
+    private class TicketResponse
+    {
+        public int TicketId { get; set; }
+        public int EventId { get; set; }
+        public string EventName { get; set; }
+        public DateTime EventStart { get; set; }
+        public DateTime EventEnd { get; set; }
+    }
+}
