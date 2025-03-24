@@ -87,8 +87,7 @@
         if(RegisterValidationComplete) {
             RegisterFormStatus = "User Successfully Registered";
             // Send Register POST Request to /auth/register
-            http.PostAsJsonAsync("https://localhost:7206/auth/register", new { username = RegisterForms.username, password = RegisterForms.password }
-    );
+            http.PostAsJsonAsync("https://localhost:7206/auth/register", new { username = RegisterForms.username, password = RegisterForms.password });
             nav.NavigateTo("/login");
         }
     }

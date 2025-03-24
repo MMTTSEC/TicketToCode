@@ -159,13 +159,13 @@
     {
         Console.WriteLine($"Delete Request to Event ID: {Id}");
         // Send Delete POST Request to /events/delete/
-        //http.PostAsJsonAsync("https://localhost:7206/events/delete/", new { id = Id }
+        http.DeleteAsync("https://localhost:7206/events/delete/" + Convert.ToInt32(Id));
     }
 
     void EventBookTicketRequest(int Id, string User)
     {
         Console.WriteLine($"BookTicket Request to Event ID: {Id} for user {User}");
         // Send BookTicket POST Request to /events/bookticket/
-        //http.PostAsJsonAsync("https://localhost:7206/events/bookticket/", new { id = Id, name = User }
+        //http.PostAsJsonAsync("https://localhost:7206/events/bookticket/", new { id = Id, name = User });
     }
 }
