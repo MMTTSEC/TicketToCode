@@ -19,7 +19,7 @@ public class CreateEvent : IEndpoint
         int MaxAttendees,
         int Bookings
         );
-    public record Response(int id);
+    public record Response(int Id);
 
     //Logic
     private static Ok<Response> Handle(Request request, IDatabase db)

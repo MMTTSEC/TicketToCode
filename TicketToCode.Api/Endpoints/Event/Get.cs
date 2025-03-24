@@ -3,7 +3,7 @@ public class GetEvent : IEndpoint
 {
     // Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
-        .MapGet("/events/{id}", Handle)
+        .MapGet("/events/{Id}", Handle)
         .WithTags("Event EndPoints")
         .WithSummary("Get event");
 

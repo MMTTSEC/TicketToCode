@@ -82,6 +82,6 @@
     {
         EditEventFormStatus = "Event Successfully Updated";
         // Send Edit Event POST Request to /events/edit
-        //http.PostAsJsonAsync("https://localhost:7206/events/edit", new { id = eventid, name = eventname, description = eventdescription, type = eventtype , starttime = eventstarttime, endtime = eventendtime, maxattendees = eventmaxattendees });
+        http.PutAsJsonAsync($"https://localhost:7206/events/update/{eventid}", new { id = eventid, name = eventname, description = eventdescription, type = eventtype , starttime = eventstarttime, endtime = eventendtime, maxattendees = eventmaxattendees });
     }
 }
