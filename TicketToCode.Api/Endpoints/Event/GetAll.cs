@@ -4,6 +4,7 @@ public class GetAllEvents : IEndpoint
     // Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
         .MapGet("/events", Handle)
+        .WithTags("Event EndPoints")
         .WithSummary("Get all events");
 
     // Request and Response types

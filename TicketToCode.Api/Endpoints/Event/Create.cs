@@ -4,6 +4,7 @@ public class CreateEvent : IEndpoint
     // Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
         .MapPost("/events/create", Handle)
+        .WithTags("Event EndPoints")
         .WithSummary("Create event");
 
     // Request and Response types

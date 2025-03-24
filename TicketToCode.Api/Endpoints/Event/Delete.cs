@@ -6,6 +6,7 @@ public class Delete : IEndpoint
     //Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
         .MapDelete("/events/{id}", Handle)
+        .WithTags("Event EndPoints")
         .WithSummary("Delete event");
 
     // Request and Response types
