@@ -57,6 +57,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// Add before app.MapEndpoints()
+app.UseCors(options =>
+{
+    options.WithOrigins("https://localhost:7205")
+           .AllowAnyMethod()
+           .AllowAnyHeader()
+           .AllowCredentials();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 

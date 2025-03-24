@@ -70,26 +70,63 @@
         }
     }
 
-    void LoginFormMethod() {
-        // Send Login POST Request to /auth/login
-        http.PostAsJsonAsync("https://localhost:7206/auth/login", new { username = LoginForms.uname, password = LoginForms.upass });
-        nav.NavigateTo("/");
-    }
-    void RegisterFormMethod()
+    async Task LoginFormMethod()
     {
-
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/login");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            request.Content = JsonContent.Create(new { Username = LoginForms.uname, Password = LoginForms.upass });
+    
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                nav.NavigateTo("/");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.Error.WriteLine($"Login error: {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Login exception: {ex}");
+        }
+    }
+    async Task RegisterFormMethod()
+    {
         if(PasswordMatches) {
             RegisterValidationComplete = true;
         } else {
             RegisterValidationComplete = false;
         }
-
+    
         if(RegisterValidationComplete) {
-            RegisterFormStatus = "User Successfully Registered";
-            // Send Register POST Request to /auth/register
-            http.PostAsJsonAsync("https://localhost:7206/auth/register", new { username = RegisterForms.username, password = RegisterForms.password }
-    );
-            nav.NavigateTo("/login");
+            try {
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/register");
+                request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+                request.Content = JsonContent.Create(new { Username = RegisterForms.username, Password = RegisterForms.password });
+    
+                var response = await http.SendAsync(request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    RegisterFormStatus = "User Successfully Registered";
+                    nav.NavigateTo("/login");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    RegisterFormStatus = $"Registration failed: {errorContent}";
+                    Console.Error.WriteLine($"Registration error: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                RegisterFormStatus = $"Error: {ex.Message}";
+                Console.Error.WriteLine($"Registration exception: {ex}");
+            }
         }
     }
 }

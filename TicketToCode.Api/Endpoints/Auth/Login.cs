@@ -26,14 +26,16 @@ public class Login : IEndpoint
             return TypedResults.NotFound("Invalid username or password");
         }
 
-        // Set a simple auth cookie
+        // Set auth cookie with SameSite=None and Secure for cross-origin requests
         context.Response.Cookies.Append("auth", $"{result.Username}:{result.Role}", new CookieOptions
         {
             HttpOnly = true,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.None,
+            Secure = true,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
+        
         var response = new Response(result.Username, result.Role);
         return TypedResults.Ok(response);
     }
-} 
+}
