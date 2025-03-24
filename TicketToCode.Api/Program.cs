@@ -1,4 +1,4 @@
-using TicketToCode.Api.Endpoints;
+﻿using TicketToCode.Api.Endpoints;
 using TicketToCode.Api.Services;
 using TicketToCode.Core.Data;
 using TicketToCode.Core.Interface;
@@ -27,19 +27,21 @@ builder.Services.AddAuthentication("Cookies")
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
+    options.AddPolicy("AllowBlazorClient", builder =>
     {
-        builder.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
+        builder.WithOrigins("https://localhost:7205")  //  Use your Blazor app's URL
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials();  //  Required for cookies
     });
 });
+
 
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-app.UseCors();
+app.UseCors("AllowBlazorClient");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
