@@ -6,6 +6,14 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7206") });
+builder.Services.AddScoped(sp => new HttpClient { 
+    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) 
+}); 
+
+// Add this configuration
+builder.Services.AddScoped(sp => new HttpClient
+{
+    DefaultRequestHeaders = { { "Access-Control-Allow-Credentials", "true" } }
+});
 
 await builder.Build().RunAsync();
