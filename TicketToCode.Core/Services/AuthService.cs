@@ -41,6 +41,7 @@ public class AuthService : IAuthService
         }
 
         var user = new User(username, BCrypt.Net.BCrypt.HashPassword(password));
+        user.Id = _database.Users.Count() + 1;
 
         _database.Users.Add(user);
         return user;
