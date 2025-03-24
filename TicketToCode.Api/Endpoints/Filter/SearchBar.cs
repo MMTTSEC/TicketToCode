@@ -7,6 +7,7 @@ namespace TicketTCode.Api.Endpoints.Filter
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapGet("/filter", Handle)
+            .WithTags("Filter EndPoints")
             .WithSummary("Search bar result");
 
         public record Request(string query);
