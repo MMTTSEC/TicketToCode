@@ -35,14 +35,22 @@ public class AuthService : IAuthService
 
     public User? Register(string username, string password)
     {
+
+
         if (_database.Users.Any(u => u.Username == username))
         {
             return null;
         }
 
         var user = new User(username, BCrypt.Net.BCrypt.HashPassword(password));
-        user.Id = _database.Users.Count() + 1;
+        var possibleId = _database.Users.Count() + 1;
 
+        while(_database.Users.Any(u => u.Id == possibleId))
+        {
+            possibleId++;
+        }
+
+        user.Id = possibleId;
         _database.Users.Add(user);
         return user;
     }
