@@ -6,6 +6,7 @@ namespace TicketToCode.Api.Endpoints.Sort
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapGet("/sort/starttime", Handle)
+            .WithTags("Sort EndPoints")
             .WithSummary("Sort by Start Time");
         public record Response(
             int Id, 
