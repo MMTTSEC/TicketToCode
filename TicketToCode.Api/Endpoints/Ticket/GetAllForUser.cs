@@ -7,6 +7,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
         // Mapping
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
         .MapGet("/tickets/my-tickets", Handle)
+        .WithTags("Ticket EndPoints")
         .WithSummary("Get all tickets for the authenticated user");
         //.RequireAuthorization();
 

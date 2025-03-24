@@ -8,6 +8,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
         // Mapping
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapPost("/tickets/book", Handle)
+            .WithTags("Ticket EndPoints")
             .WithSummary("Book a ticket for an event");
            // .RequireAuthorization(); 
 
