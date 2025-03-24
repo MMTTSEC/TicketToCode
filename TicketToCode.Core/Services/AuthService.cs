@@ -50,17 +50,13 @@ public class AuthService : IAuthService
 
     public User? Login(string username, string password)
     {
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-        {
-            return null;
-        }
-
         var user = _database.Users.FirstOrDefault(u => u.Username == username);
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
             return null;
         }
 
-        return new User(user.Username, user.Role);
+        // Return the original user object to preserve the role
+        return user;
     }
 }
