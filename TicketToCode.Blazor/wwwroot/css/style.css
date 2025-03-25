@@ -117,6 +117,10 @@ article .search:focus-visible {
     border-radius: 5px;
 }
 
+article .noEventsFound {
+    margin-top: 10px;
+}
+
 article section#events-wrapper {
     width: 100%;
     display: flex;

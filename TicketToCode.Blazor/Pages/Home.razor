@@ -7,7 +7,7 @@
 <h1>Events</h1>
 <input class="search" type="text" @bind="SearchQuery" @bind:event="oninput" @bind:after="Search" placeholder="Search..."/>
 
-@if (!EventsAvailable) {
+@if (events.Count == 0) {
     <p class="noEventsFound">There are currently no events available.</p>
 } else {
     <section id="events-wrapper">
@@ -38,12 +38,13 @@
                     <p class="event-description">@eventItem.Description</p>
                     <p class="event-date"><span class="event-start">Event Start: @eventItem.StartTime</span><br /> <span class="event-end">Event End: @eventItem.EndTime</span></p>
                     <p class="event-attendees">
-                        <span class="@(eventItem.RemainingSeats == 0 ? "error" : (eventItem.RemainingSeats < (eventItem.MaxAttendees / 2)) ? "warning" : "success")">
-                            @eventItem.RemainingSeats
+                        @if (RemainingSeats >= 0) { RemainingSeats = eventItem.MaxAttendees - eventItem.Bookings; }
+                        <span class="@(RemainingSeats == 0 ? "error" : (RemainingSeats < (eventItem.MaxAttendees / 2)) ? "warning" : "success")">
+                            @RemainingSeats
                             / @eventItem.MaxAttendees</span><br />Tickets Remaining
                     </p>
                     <div class="event-buttons-wrapper">
-                        <button class="@(eventItem.RemainingSeats == 0 ? "event-button-closed" : "event-button")" @onclick="() => DisplayPopup(eventItem.Id, RequestType.BookTicket)">@(eventItem.RemainingSeats == 0 ? "Fully Booked" : "Book Ticket")</button>
+                        <button class="@(RemainingSeats == 0 ? "event-button-closed" : "event-button")" @onclick="() => DisplayPopup(eventItem.Id, RequestType.BookTicket)">@(RemainingSeats == 0 ? "Fully Booked" : "Book Ticket")</button>
                     </div>
                 </div>
             }
@@ -65,12 +66,57 @@
     }
 }
 @code {
-    public bool EventsAvailable = true;
     public int SearchResultsFound = 0;
     public string SearchQuery = "";
+    public int RemainingSeats = 0;
+    private List<Event> events = new List<Event>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetEventsAsync();
+        nav.NavigateTo("/", true);
+    }
+
+    private async Task AddEventsWhenLoading() {
+        await http.PostAsJsonAsync("https://localhost:7206/events/create", new { Name = "Event 1", Description = "Event 1 Description, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", Type = EventType.Concert, StartTime = DateTime.Parse("2025-04-01 18:00"), EndTime = DateTime.Parse("2025-04-01 21:00"), MaxAttendees = 100, Bookings = 100 });
+        await http.PostAsJsonAsync("https://localhost:7206/events/create", new { Name = "Event 2", Description = "Event 2 Description, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", Type = EventType.Festival, StartTime = DateTime.Parse("2025-04-02 18:00"), EndTime = DateTime.Parse("2025-04-04 18:00"), MaxAttendees = 3300, Bookings = 1000 });
+        await http.PostAsJsonAsync("https://localhost:7206/events/create", new { Name = "Event 3", Description = "Event 3 Description, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", Type = EventType.Concert, StartTime = DateTime.Parse("2025-04-03 18:00"), EndTime = DateTime.Parse("2025-04-04 00:00"), MaxAttendees = 1000, Bookings = 550 });
+    }
+
+    private async Task GetEventsAsync()
+    {
+        try
+        {
+            // Call your API and deserialize the response into the 'events' list
+            events = await http.GetFromJsonAsync<List<Event>>("https://localhost:7206/events");
+
+            // You can log the data or inspect if needed
+            Console.WriteLine($"Events fetched: {events.Count}");
+            if (events.Count == 0)
+            {
+                await AddEventsWhenLoading();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching events: {ex.Message}");
+        }
+    }
+
+    public class Event
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public EventType Type { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public int MaxAttendees { get; set; }
+        public int Bookings { get; set; }
+    }
 
     // Temporary event data
-    List<Event> events = new List<Event> {
+    /*List<Event> events = new List<Event> {
         new Event { Id = 1, Name = "Event 1", Description = "Event 1 Description, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", Type = EventType.Concert, StartTime = DateTime.Parse("2025-04-01 18:00"), EndTime = DateTime.Parse("2025-04-01 21:00"), MaxAttendees = 100, Bookings = 100 },
         new Event { Id = 2, Name = "Event 2", Description = "Event 2 Description, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", Type = EventType.Festival, StartTime = DateTime.Parse("2025-04-02 18:00"), EndTime = DateTime.Parse("2025-04-04 18:00"), MaxAttendees = 3300, Bookings = 1000 },
         new Event { Id = 3, Name = "Event 3", Description = "Event 3 Description, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", Type = EventType.Concert, StartTime = DateTime.Parse("2025-04-03 18:00"), EndTime = DateTime.Parse("2025-04-04 00:00"), MaxAttendees = 1000, Bookings = 550 },
@@ -89,7 +135,7 @@
         public int MaxAttendees { get; set; }
         public int Bookings { get; set; }
         public int RemainingSeats => MaxAttendees - Bookings;
-    }
+    }*/
 
     public enum EventType
     {
@@ -160,6 +206,7 @@
         Console.WriteLine($"Delete Request to Event ID: {Id}");
         // Send Delete POST Request to /events/delete/
         http.DeleteAsync("https://localhost:7206/events/delete/" + Convert.ToInt32(Id));
+        nav.NavigateTo("/", true);
     }
 
     void EventBookTicketRequest(int Id, string User)
