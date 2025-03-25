@@ -24,10 +24,18 @@ public class CreateEvent : IEndpoint
     //Logic
     private static Ok<Response> Handle(Request request, IDatabase db)
     {
+        //makeing sure there are no duplicite id's.
+        var possilbeId = db.Events.Count + 1;
+        while (db.Events.Any(e => e.Id == possilbeId)) 
+        {
+            possilbeId++;
+        }
+
         // Todo, use a better constructor that enforces setting all necessary properties
         var ev = new Event()
         {
-            Id = db.Events.Count + 1,
+            
+            Id = possilbeId,
             Name = request.Name,
             Description = request.Description,
             Type = request.Type,

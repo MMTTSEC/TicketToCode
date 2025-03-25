@@ -1,0 +1,107 @@
+﻿@page "/mytickets"
+@inject NavigationManager nav
+@inject HttpClient http
+
+<h1>My Tickets</h1>
+@if (error != null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (tickets == null)
+{
+    <p>Loading...</p>
+}
+else if (!tickets.Any())
+{
+    <p>No tickets found.</p>
+}
+else
+{
+    <div class="container mt-4">
+        <div class="row g-4">
+            @foreach (var ticket in tickets)
+            {
+                <div class="col-md-6">
+                    <div class="ticket-card">
+                        <button class="cancel-ticket" @onclick="() => CancelTicket(ticket.TicketId)" title="Cancel Ticket">
+                            ❌
+                        </button>
+                        <div class="ticket-header">@ticket.EventName</div>
+                        <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
+                        <p><strong>Event ID:</strong> @ticket.EventId</p>
+                        <p><strong>Start:</strong> @ticket.EventStart.ToString("yyyy-MM-dd HH:mm")</p>
+                        <p><strong>End:</strong> @ticket.EventEnd.ToString("yyyy-MM-dd HH:mm")</p>
+                        <div class="ticket-footer">🎟 Enjoy the event!</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private List<TicketResponse>? tickets;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTickets();
+    }
+
+    private async Task LoadTickets()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/tickets/my-tickets");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                tickets = await response.Content.ReadFromJsonAsync<List<TicketResponse>>();
+            }
+            else
+            {
+                error = $"Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Error fetching tickets: {ex.Message}";
+            Console.Error.WriteLine($"Error fetching tickets: {ex.Message}");
+        }
+    }
+
+    private async Task CancelTicket(int ticketId)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"https://localhost:7206/tickets/{ticketId}");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadTickets(); // Reload the tickets list
+            }
+            else
+            {
+                error = $"Error canceling ticket: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Error canceling ticket: {ex.Message}";
+            Console.Error.WriteLine($"Error canceling ticket: {ex.Message}");
+        }
+    }
+
+    private class TicketResponse
+    {
+        public int TicketId { get; set; }
+        public int EventId { get; set; }
+        public string EventName { get; set; }
+        public DateTime EventStart { get; set; }
+        public DateTime EventEnd { get; set; }
+    }
+}

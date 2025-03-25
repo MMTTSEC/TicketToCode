@@ -5,7 +5,7 @@ using TicketToCode.Api.Services;
 
 namespace TicketToCode.Api.Endpoints.Auth
 {
-    public class AuthDebug : IEndpoint
+    public class AuthDebug : IEndpoint //can be deleted
     {
         //Mapping
         public static void MapEndpoint(IEndpointRouteBuilder app)
