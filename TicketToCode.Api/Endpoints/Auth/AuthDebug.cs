@@ -12,6 +12,7 @@ namespace TicketToCode.Api.Endpoints.Auth
         {
             app
             .MapGet("/auth/Debug", Handle)
+            .WithTags("Auth EndPoints")
             .WithSummary("View user Database");
         }
 

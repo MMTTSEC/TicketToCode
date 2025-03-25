@@ -5,6 +5,7 @@
         // Mapping
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapGet("/tickets/stats", Handle)
+            .WithTags("Ticket EndPoints")
             .WithSummary("Get statistics for all tickets (admin)");
         // .RequireAuthorization() commented out for testing
 

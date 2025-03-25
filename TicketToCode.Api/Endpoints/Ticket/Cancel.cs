@@ -7,6 +7,7 @@ namespace TicketToCode.Api.Endpoints.Ticket
         // Mapping
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapDelete("/tickets/{id}", Handle)
+            .WithTags("Ticket EndPoints")
             .WithSummary("Cancel a ticket for an event for the authenticated user");
      
 

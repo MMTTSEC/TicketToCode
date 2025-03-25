@@ -1,0 +1,143 @@
+﻿@page "/users"
+@inject NavigationManager nav
+@inject HttpClient http 
+
+@using TicketToCode.Core.Models
+@using System.Reflection
+
+<PageTitle>Users</PageTitle>
+
+<h1 class="text-center my-4">Users</h1>
+
+<section id="user-wrapper" class="container">
+    @if (listOfUser == null)
+    {
+        <p class="text-center">Loading Users...</p>
+    }
+    else if (!listOfUser.Any())
+    {
+        <p class="text-center">No Users Found</p>
+
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var u in listOfUser)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body bg-light">
+                            <div class="mb-3">
+                                <label for="username-@u.Id" class="form-label"><strong>User Name:</strong></label>
+                                <input type="text" id="username-@u.Id" class="form-control" @bind="u.Username" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="role-@u.Id" class="form-label"><strong>Role:</strong></label>
+                                <select id="role-@u.Id" class="form-select" @bind="u.Role">
+                                    @foreach (var role in GetRoles())
+                                    {
+                                        <option value="@role">@role</option>
+                                    }
+                                </select>
+                            </div>
+                            <p class="card-text"><strong>Created At:</strong> @u.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                            <button class="btn btn-success" @onclick="() => SaveUser(u)">Save Changes</button>
+                            <button class="btn btn-danger" @onclick="() => DeleteUser(u)">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+@code 
+{
+    private class UserModle
+    {
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string Role { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+    private List<UserModle>? listOfUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUsers();
+    }
+
+    private async Task GetUsers()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/users/all");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                listOfUser = await response.Content.ReadFromJsonAsync<List<UserModle>>();
+                Console.WriteLine("Deserialized List Count: " + listOfUser?.Count); // Debugging line
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine("Exception: " + e.Message);
+        }
+    }
+
+    private IEnumerable<string> GetRoles()
+    {
+        return typeof(UserRoles)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(f => f.IsLiteral && !f.IsInitOnly)
+            .Select(f => f.GetValue(null).ToString());
+    }
+
+    private async Task SaveUser(UserModle user)
+    {
+        var userData = new { user.Id, username = user.Username, role = user.Role };
+        var jsonContent = JsonContent.Create(userData);
+
+        Console.WriteLine("Sending PUT request with data: " + await jsonContent.ReadAsStringAsync()); // Debugging line
+
+        var request = new HttpRequestMessage(HttpMethod.Put, $"https://localhost:7206/users/edit/{user.Id}")
+        {
+            Content = jsonContent
+        };
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+        var response = await http.SendAsync(request);
+        var responseContent = await response.Content.ReadAsStringAsync(); // Debugging line
+        Console.WriteLine("Response: " + responseContent); // Debugging line
+
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("User updated successfully.");
+        }
+        else
+        {
+            Console.WriteLine("Failed to update user. Status code: " + response.StatusCode);
+        }
+    }
+
+    private async Task DeleteUser(UserModle user)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"https://localhost:7206/users/{user.Id}");
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+        var response = await http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            listOfUser?.Remove(user);
+            Console.WriteLine("User deleted successfully.");
+        }
+        else
+        {
+            Console.WriteLine("Failed to delete user. Status code: " + response.StatusCode);
+        }
+    }
+}

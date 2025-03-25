@@ -42,8 +42,8 @@
         public EventType eType { get; set; }
         public DateTime eStartTime { get; set; } = new DateTime(DateTime.Now.Ticks / 600000000 * 600000000);
         public DateTime eEndTime { get; set; } = new DateTime(DateTime.Now.Ticks / 600000000 * 600000000);
-        public int eBookings { get; set; } = 0;
         public int eMaxAttendees { get; set; } = 20;
+        public int eBookings { get; set; } = 0;
     }
 
     public enum EventType
@@ -59,7 +59,7 @@
     {
         CreateEventFormStatus = "Event Successfully Created";
         // Send Create Event POST Request to /auth/login
-        //http.PostAsJsonAsync("https://localhost:7206/auth/login", new { name = EventForms.eName, description = EventForms.eDesc, type = EventForms.eType , starttime = EventForms.eStartTime, endtime = EventForms.eEndTime, bookings = EventForms.eBookings, maxattendees = EventForms.eMaxAttendees });
+        http.PostAsJsonAsync("https://localhost:7206/events/create", new { name = EventForms.eName, description = EventForms.eDesc, type = EventForms.eType , start = EventForms.eStartTime, end = EventForms.eEndTime, maxattendees = EventForms.eMaxAttendees, bookings = EventForms.eBookings });
         nav.NavigateTo("/?EventCreated=true&EventName="+EventForms.eName);
     }
 }

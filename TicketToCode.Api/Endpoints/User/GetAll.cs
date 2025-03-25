@@ -6,7 +6,7 @@
         public static void MapEndpoint(IEndpointRouteBuilder app)
         {
             app
-            .MapGet("/user/all", Handle)
+            .MapGet("/users/all", Handle)
             .WithSummary("View All Users Database");
         }
 
