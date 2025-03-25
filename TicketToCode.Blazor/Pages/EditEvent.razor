@@ -48,11 +48,11 @@
 
     [Parameter]
     [SupplyParameterFromQuery]
-    public DateTime? eventstarttime { get; set; }
+    public DateTime eventstarttime { get; set; }
 
     [Parameter]
     [SupplyParameterFromQuery]
-    public DateTime? eventendtime { get; set; }
+    public DateTime eventendtime { get; set; }
 
     [Parameter]
     [SupplyParameterFromQuery]
@@ -66,7 +66,6 @@
 
     public class EventEditForm
     {
-
     }
 
     public enum EventType
@@ -82,17 +81,7 @@
     {
         EditEventFormStatus = "Event Successfully Updated";
 
-        var updateRequest = new
-        {
-            Name = eventname,
-            Description = eventdescription,
-            Type = eventtype,
-            Start = eventstarttime,
-            End = eventendtime,
-            MaxAttendees = eventmaxattendees
-        };
-
-        // Send Edit Event PUT Request to /events/update/ID
-        http.PutAsJsonAsync($"https://localhost:7206/events/update/{eventid}", updateRequest);
+        http.PutAsJsonAsync($"https://localhost:7206/events/update/{eventid}", new { Name = eventname, Description = eventdescription, Type = EventType.Parse(typeof(EventType), eventtype), Start = eventstarttime, End = eventendtime, MaxAttendees = eventmaxattendees });
+        nav.NavigateTo("/");
     }
 }
