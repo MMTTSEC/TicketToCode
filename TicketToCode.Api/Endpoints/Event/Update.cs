@@ -14,8 +14,7 @@ public class Update : IEndpoint
         EventType Type,
         DateTime Start,
         DateTime End,
-        int MaxAttendees,
-        int Bookings
+        int MaxAttendees
     );
 
     public record Response(
@@ -49,7 +48,6 @@ public class Update : IEndpoint
         ev.StartTime = request.Start;
         ev.EndTime = request.End;
         ev.MaxAttendees = request.MaxAttendees;
-        ev.Bookings = request.Bookings;
 
         // Map the updated event to the response DTO
         var response = new Response(
