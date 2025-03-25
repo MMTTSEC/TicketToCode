@@ -3,7 +3,7 @@
     public class Put : IEndpoint
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
-            .MapPut("/user/edit/{id}", Handle)
+            .MapPut("/users/edit/{id}", Handle)
             .WithSummary("Edit User attributes");
 
         public record Request(

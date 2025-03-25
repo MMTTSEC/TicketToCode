@@ -1,0 +1,84 @@
+﻿@page "/users"
+@inject NavigationManager nav
+@inject HttpClient http 
+
+@using TicketToCode.Core.Models
+
+<PageTitle>Users</PageTitle>
+
+<h1 class="text-center my-4">Users</h1>
+
+<section id="user-wrapper" class="container">
+    @if (listOfUser == null)
+    {
+        <p class="text-center">Loading Users...</p>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var u in listOfUser)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body bg-light">
+                            <p class="card-text"><strong>User Name:</strong> @u.Username</p>
+                            <p class="card-text"><strong>Role:</strong> @u.Role</p>
+                            <p class="card-text"><strong>Created At:</strong> @u.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                            <button class="btn btn-success" @onclick="() => SaveUser()">Save Changes</button>
+                            <button class="btn btn-danger" @onclick="() => DeleteUser()">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+@code 
+{
+    private class UserModle
+    {
+        public int Id { get; protected set; }
+        public string Username { get; set; }
+        public string Role { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+    private List<UserModle>? listOfUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUsers();
+    }
+
+    private async Task GetUsers()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/users/all");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                listOfUser = await response.Content.ReadFromJsonAsync<List<UserModle>>();
+                Console.WriteLine("Deserialized List Count: " + listOfUser?.Count); // Debugging line
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine("Exception: " + e.Message);
+        }
+    }
+
+    private async Task SaveUser()
+    {
+        // Implement SaveUser logic here
+    }
+
+    private async Task DeleteUser()
+    {
+        // Implement DeleteUser logic here
+    }
+}
