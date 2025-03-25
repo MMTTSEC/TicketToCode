@@ -7,6 +7,7 @@ public class Register : IEndpoint
     // Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
         .MapPost("/auth/register", Handle)
+        .WithTags("Auth EndPoints")
         .WithSummary("Register a new user")
         .AllowAnonymous();
 

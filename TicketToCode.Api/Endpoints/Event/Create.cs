@@ -3,7 +3,8 @@ public class CreateEvent : IEndpoint
 {
     // Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
-        .MapPost("/events", Handle)
+        .MapPost("/events/create", Handle)
+        .WithTags("Event EndPoints")
         .WithSummary("Create event");
 
     // Request and Response types
@@ -15,9 +16,10 @@ public class CreateEvent : IEndpoint
         EventType Type,
         DateTime Start,
         DateTime End,
-        int MaxAttendees
+        int MaxAttendees,
+        int Bookings
         );
-    public record Response(int id);
+    public record Response(int Id);
 
     //Logic
     private static Ok<Response> Handle(Request request, IDatabase db)
@@ -39,7 +41,8 @@ public class CreateEvent : IEndpoint
             Type = request.Type,
             StartTime = request.Start,
             EndTime = request.End,
-            MaxAttendees = request.MaxAttendees
+            MaxAttendees = request.MaxAttendees,
+            Bookings = request.Bookings
         };
 
 

@@ -4,6 +4,7 @@ public class GetAllEvents : IEndpoint
     // Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
         .MapGet("/events", Handle)
+        .WithTags("Event EndPoints")
         .WithSummary("Get all events");
 
     // Request and Response types
@@ -14,7 +15,9 @@ public class GetAllEvents : IEndpoint
         EventType Type,
         DateTime Start,
         DateTime End,
-        int MaxAttendees
+        int MaxAttendees,
+        int Bookings,
+        int RemainingSeats
     );
 
     //Logic
@@ -28,7 +31,9 @@ public class GetAllEvents : IEndpoint
                 Type: item.Type,
                 Start: item.StartTime,
                 End: item.EndTime,
-                MaxAttendees: item.MaxAttendees
+                MaxAttendees: item.MaxAttendees,
+                Bookings: item.Bookings,
+                RemainingSeats: item.MaxAttendees - item.Bookings
             )).ToList();
     }
 }

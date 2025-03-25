@@ -5,6 +5,7 @@
         // Mapping
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapGet("/tickets/event/{eventId}", Handle)
+            .WithTags("Ticket EndPoints")
             .WithSummary("Get all tickets for an event.(admin)");
         //.RequireAuthorization();
 

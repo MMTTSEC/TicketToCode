@@ -6,6 +6,7 @@ namespace TicketToCode.Api.Endpoints.Sort
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapGet("/sort/remaningTickets", Handle)
+            .WithTags("Sort EndPoints")
             .WithSummary("Sort by Remaining Tickets");
 
         public record Response(
