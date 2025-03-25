@@ -9,7 +9,6 @@ public class Update : IEndpoint
 
     // Request and Response types
     public record Request(
-        int Id,
         string Name,
         string Description,
         EventType Type,
