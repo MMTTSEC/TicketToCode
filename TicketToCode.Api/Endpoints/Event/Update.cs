@@ -9,7 +9,6 @@ public class Update : IEndpoint
 
     // Request and Response types
     public record Request(
-        int Id,
         string Name,
         string Description,
         EventType Type,
@@ -26,8 +25,7 @@ public class Update : IEndpoint
         DateTime Start,
         DateTime End,
         int MaxAttendees,
-        int Bookings,
-        int RemainingSeats
+        int Bookings
     );
 
 
@@ -59,8 +57,7 @@ public class Update : IEndpoint
             Start: ev.StartTime,
             End: ev.EndTime,
             MaxAttendees: ev.MaxAttendees,
-            Bookings: ev.Bookings,
-            RemainingSeats: ev.MaxAttendees - ev.Bookings
+            Bookings: ev.Bookings
         );
 
         return TypedResults.Ok(response);

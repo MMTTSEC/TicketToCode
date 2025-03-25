@@ -18,8 +18,7 @@ public class GetEvent : IEndpoint
         DateTime Start,
         DateTime End,
         int MaxAttendees,
-        int Bookings,
-        int RemainingSeats
+        int Bookings
     );
 
 
@@ -37,8 +36,7 @@ public class GetEvent : IEndpoint
             Start: ev.StartTime,
             End: ev.EndTime,
             MaxAttendees: ev.MaxAttendees,
-            Bookings: ev.Bookings,
-            RemainingSeats: ev.MaxAttendees - ev.Bookings
+            Bookings: ev.Bookings
             );
 
         return response;
