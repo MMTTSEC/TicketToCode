@@ -22,7 +22,6 @@
 
         private static IResult Handle(Request request, IDatabase db)
         {
-            Console.WriteLine($"Received PUT request with data: Id={request.Id}, Username={request.username}, Role={request.role}"); // Debugging line
 
             var u = db.Users.Find(u => u.Id == request.Id);
             if (u == null)
@@ -32,6 +31,11 @@
 
             if (request.username != null)
             {
+                var existingUser = db.Users.FirstOrDefault(user => user.Username == request.username);
+                if (existingUser != null)
+                {
+                    return TypedResults.BadRequest("Username already exists");
+                }
                 u.Username = request.username;
             }
             if (request.role != null)
@@ -60,8 +64,6 @@
             }
 
             var response = new Response(u.Id, u.Username, u.Role, u.CreatedAt); 
-
-            Console.WriteLine($"Updated user: Id={u.Id}, Username={u.Username}, Role={u.Role}"); // Debugging line
 
             return TypedResults.Ok(response);
         }
