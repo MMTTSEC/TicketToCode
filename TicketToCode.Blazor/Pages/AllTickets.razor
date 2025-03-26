@@ -18,32 +18,33 @@ else if (!tickets.Any())
 else
 {
     @foreach (var eventItem in events) {
-    <div class="container mt-4">
-            <h2 style="color: #4d2965b2;"><span style="color:#591487; font-size: 2rem; font-weight: bold;;">#@eventItem.Id</span> @eventItem.Name</h2>
-        <div class="row g-4">
-            @foreach (var ticket in tickets)
-            {
-                <div class="col-md-6">
-                    <div class="ticket-card">
-                        <button class="cancel-ticket" @onclick="() => CancelTicket(ticket.TicketId)" title="Cancel Ticket">
-                            ❌
-                        </button>
-                        <div class="ticket-header">@ticket.EventName</div>
-                        <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
-                        <p><strong>Event ID:</strong> @ticket.EventId</p>
-                        <p><strong>Start:</strong> @ticket.EventStart.ToString("yyyy-MM-dd HH:mm")</p>
-                        <p><strong>End:</strong> @ticket.EventEnd.ToString("yyyy-MM-dd HH:mm")</p>
-                        <div class="ticket-footer">🎟 Enjoy the event!</div>
+        <div class="container mt-4">
+            <h2 style="color: #4d2965;"><span style="color:#591487; font-size: 2rem; font-weight: bold;;">#@eventItem.Id</span> @eventItem.Name</h2>
+            <div class="row g-4">
+                @foreach (var ticket in tickets)
+                {
+                    <div class="col-md-6">
+                        <div class="ticket-card">
+                            <button class="cancel-ticket" @onclick="() => CancelTicket(ticket.TicketId)" title="Cancel Ticket">
+                                ❌
+                            </button>
+                            <div class="ticket-header">@ticket.EventName</div>
+                            <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
+                            <p><strong>Event ID:</strong> @ticket.EventId</p>
+                            <p><strong>Start:</strong> @ticket.EventStart.ToString("yyyy-MM-dd HH:mm")</p>
+                            <p><strong>End:</strong> @ticket.EventEnd.ToString("yyyy-MM-dd HH:mm")</p>
+                            <div class="ticket-footer">🎟 Enjoy the event!</div>
+                        </div>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
-    </div>
     }
 }
 
 @code {
     private List<Event> events = new List<Event>();
+    private List<TicketResponse>? tickets;
 
     private async Task GetEventsAsync()
     {
@@ -66,9 +67,6 @@ else
         public string Name { get; set; } = string.Empty;
     }
 
-
-
-    private List<TicketResponse>? tickets;
     private string? error;
 
     protected override async Task OnInitializedAsync()
@@ -111,7 +109,7 @@ else
             var response = await http.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
-                await LoadTickets(); // Reload the tickets list
+                nav.NavigateTo("/alltickets", true);
             }
             else
             {
