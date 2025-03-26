@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager nav
+@inject HttpClient http
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -9,7 +12,10 @@
             <div id="admin-links-wrapper">
                 <a class="admin-links" href="createEvent">Create Event</a>
             </div>
-            <a href="login">Login/Register</a>
+            <div class="auth-links">
+                <a href="login">Login/Register</a>
+                <button class="btn btn-link" @onclick="Logout">Logout</button>
+            </div>
         </div>
 
         <article class="content px-4">
@@ -17,3 +23,24 @@
         </article>
     </main>
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/logout");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                nav.NavigateTo("/", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Logout exception: {ex}");
+        }
+    }
+}

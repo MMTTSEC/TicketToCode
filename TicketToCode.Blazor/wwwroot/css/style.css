@@ -1,4 +1,13 @@
 ﻿/* Top Row */
+.auth-links {
+    display: flex;
+    align-items: center;
+}
+
+.auth-links a,
+.auth-links button {
+    margin-right: 10px;
+}
 .top-row {
     justify-content: space-between !important;
 }
