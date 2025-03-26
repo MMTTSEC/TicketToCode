@@ -1,8 +1,9 @@
 ﻿.ticket-card {
-    border: 2px solid #333;
+    border: 2px solid #c288e3;
     border-radius: 10px;
     padding: 20px;
-    background: linear-gradient(135deg, #4B79A1, #283E51);
+    font-size: 14px;
+    background: linear-gradient(135deg, #591487, #283E51);
     color: white;
     box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
     position: relative;
@@ -29,8 +30,12 @@
         right: 0;
     }
 
+    .ticket-card p {
+        padding-left: 15px;
+    }
+
 .ticket-header {
-    font-size: 20px;
+    font-size: 28px;
     font-weight: bold;
     text-transform: uppercase;
     margin-bottom: 10px;
