@@ -2,7 +2,7 @@
 @inject NavigationManager nav
 @inject HttpClient http
 
-<h1>My Tickets</h1>
+<h1>All Tickets</h1>
 @if (error != null)
 {
     <div class="alert alert-danger">@error</div>
@@ -17,7 +17,9 @@ else if (!tickets.Any())
 }
 else
 {
+    @foreach (var eventItem in events) {
     <div class="container mt-4">
+            <h2 style="color: #4d2965b2;"><span style="color:#591487; font-size: 2rem; font-weight: bold;;">#@eventItem.Id</span> @eventItem.Name</h2>
         <div class="row g-4">
             @foreach (var ticket in tickets)
             {
@@ -37,14 +39,41 @@ else
             }
         </div>
     </div>
+    }
 }
 
 @code {
+    private List<Event> events = new List<Event>();
+
+    private async Task GetEventsAsync()
+    {
+        try
+        {
+            // Call your API and deserialize the response into the 'events' list
+            events = await http.GetFromJsonAsync<List<Event>>("https://localhost:7206/events");
+
+            // You can log the data or inspect if needed
+            Console.WriteLine($"Events fetched: {events.Count}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching events: {ex.Message}");
+        }
+    }
+    public class Event
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+
+
     private List<TicketResponse>? tickets;
     private string? error;
 
     protected override async Task OnInitializedAsync()
     {
+        await GetEventsAsync();
         await LoadTickets();
     }
 
