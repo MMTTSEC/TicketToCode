@@ -1,87 +1,111 @@
-@page "/login"
+﻿@page "/login"
 @inject NavigationManager nav
 @inject HttpClient http
 
-<PageTitle>Login/Register</PageTitle>
+<PageTitle>Login</PageTitle>
 
-<!-- With Blazor Form Validation -->
-<div id="login">
-    <h1>Login</h1>
-    <EditForm Model=@LoginForms OnValidSubmit="@LoginFormMethod">
-        <input type="text" id="uname" name="uname" placeholder="Username" @bind-value="LoginForms.uname" required />
-        <input type="password" id="upass" name="upass" placeholder="Password" @bind-value="LoginForms.upass" minlength="8" required />
-        <button type="submit">Login</button>
-    </EditForm>
-</div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <button class="nav-link @(activeTab == "login" ? "active text-dark" : "text-white")"
+                                    @onclick='() => activeTab = "login"'>
+                                Login
+                            </button>
+                            <button class="nav-link @(activeTab == "register" ? "active text-dark" : "text-white")"
+                                    @onclick='() => activeTab = "register"'>
+                                Register
+                            </button>
 
-<div id="register">
-    <h1>Register</h1>
-    <EditForm Model=@RegisterForms OnValidSubmit="@RegisterFormMethod">
-        <input type="text" id="reguname" name="reguname" @bind-value="RegisterForms.username" placeholder="Username" required />
-        <input type="password" id="regupass" style="@PasswordErrorStyle" name="regupass" @bind-value="RegisterForms.password" @bind-value:event="oninput" placeholder="Password" minlength="8" required />
-        <input type="password" id="regurepass" style="@PasswordErrorStyle" name="regurepass" @bind="RePassword" @bind:event="oninput" placeholder="Re:Password" minlength="8" required />
-        @if (!PasswordMatches && RePassword != "") { <span class="error">Passwords doesn't match.</span> }
-        <button type="submit" @onclick="DoesPasswordsMatch">Register</button>
-    </EditForm>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    @if (activeTab == "login")
+                    {
+                        <h3 class="card-title text-center mb-4">Login</h3>
+                        <EditForm Model="loginModel" OnSubmit="LoginFormMethod">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Login</button>
+                            </div>
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <h3 class="card-title text-center mb-4">Register</h3>
+                        <EditForm Model="registerModel" OnSubmit="RegisterFormMethod">
+                            <div class="mb-3">
+                                <label for="reg-username" class="form-label">Username</label>
+                                <InputText id="reg-username" class="form-control" @bind-Value="registerModel.Username" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="reg-password" class="form-label">Password</label>
+                                <InputText id="reg-password" type="password" class="form-control" @bind-Value="registerModel.Password" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm-password" class="form-label">Confirm Password</label>
+                                <InputText id="confirm-password" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" />
+                                @if (!string.IsNullOrEmpty(passwordMatchError))
+                                {
+                                    <div class="text-danger mt-1">@passwordMatchError</div>
+                                }
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Register</button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-@if (RegisterFormStatus != "")
-{
-    <p><span class="success">@RegisterFormStatus</span></p>
-}
 
 @code {
-    // Variables
-    string RegisterFormStatus = "";
+    private string activeTab = "login";
+    private string passwordMatchError = string.Empty;
 
-    public string RePassword = "";
-    public string PasswordErrorStyle = "";
-
-    private bool PasswordMatches;
-    private bool RegisterValidationComplete = false;
-
-    // Login & Register Objects
-    LoginForm LoginForms = new LoginForm();
-    RegisterForm RegisterForms = new RegisterForm();
-
-    public class LoginForm
+    private class LoginModel
     {
-        public string uname = "";
-        public string upass = "";
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 
-    public class RegisterForm
+    private class RegisterModel
     {
-        public string username = "";
-        public string password = "";
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 
-    // Login & Register Methods
-    private void DoesPasswordsMatch()
-    {
-        if (RegisterForms.password == RePassword)
-        {
-            PasswordMatches = true;
-            PasswordErrorStyle = "";
-        }
-        else
-        {
-            PasswordMatches = false;
-            PasswordErrorStyle = "border: 1px solid red; color: red;";
-        }
-    }
+    private LoginModel loginModel = new();
+    private RegisterModel registerModel = new();
 
-    async Task LoginFormMethod()
+    private async Task LoginFormMethod()
     {
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/login");
+            request.Content = JsonContent.Create(new { Username = loginModel.Username, Password = loginModel.Password });
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            request.Content = JsonContent.Create(new { Username = LoginForms.uname, Password = LoginForms.upass });
 
             var response = await http.SendAsync(request);
+            
             if (response.IsSuccessStatusCode)
             {
-                nav.NavigateTo("/");
+                // The cookie is set by the server, so we just need to navigate
+                nav.NavigateTo("/", true);
             }
             else
             {
@@ -94,44 +118,49 @@
             Console.Error.WriteLine($"Login exception: {ex}");
         }
     }
+
+    // Remove any AuthData class that might reference localStorage
+    // private class AuthData
+    // {
+    //     public string Role { get; set; }
+    //     public string Token { get; set; }
+    //     public DateTime Expiration { get; set; }
+    // }
+
     async Task RegisterFormMethod()
     {
-        if (PasswordMatches)
+        if (registerModel.Password != registerModel.ConfirmPassword)
         {
-            RegisterValidationComplete = true;
+            passwordMatchError = "Passwords do not match";
+            return;
         }
-        else
+        
+        passwordMatchError = string.Empty;
+        
+        try
         {
-            RegisterValidationComplete = false;
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/register");
+            request.Content = JsonContent.Create(new { Username = registerModel.Username, Password = registerModel.Password });
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+            var response = await http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // After successful registration, switch to login tab
+                activeTab = "login";
+                loginModel.Username = registerModel.Username;
+                registerModel = new RegisterModel();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.Error.WriteLine($"Registration error: {errorContent}");
+            }
         }
-
-        if (RegisterValidationComplete)
+        catch (Exception ex)
         {
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/register");
-                request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-                request.Content = JsonContent.Create(new { Username = RegisterForms.username, Password = RegisterForms.password });
-
-                var response = await http.SendAsync(request);
- 
-                if (response.IsSuccessStatusCode)
-                {
-                    RegisterFormStatus = "User Successfully Registered";
-                    nav.NavigateTo("/login");
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    RegisterFormStatus = $"Registration failed: {errorContent}";
-                    Console.Error.WriteLine($"Registration error: {errorContent}");
-                }
-            }
-            catch (Exception ex)
-            {
-                RegisterFormStatus = $"Error: {ex.Message}";
-                Console.Error.WriteLine($"Registration exception: {ex}");
-            }
+            Console.Error.WriteLine($"Registration exception: {ex}");
         }
     }
 }
