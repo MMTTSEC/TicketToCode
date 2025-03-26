@@ -223,7 +223,6 @@
     {
         Console.WriteLine($"BookTicket Request to Event ID: {Id}");
         
-        // Create and send the request with credentials
         var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/tickets/book");
         request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
         request.Content = JsonContent.Create(new { EventId = Id });
@@ -232,30 +231,26 @@
         http.SendAsync(request).ContinueWith(task => {
             if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode)
             {
-                // Update the booking count
                 http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{Id}", new { Bookings = CurrentBookings + 1 });
                 
-                // Navigate to the tickets page
                 nav.NavigateTo("/mytickets", true);
             }
             else
             {
                 Console.Error.WriteLine($"Booking failed: {(task.IsCompletedSuccessfully ? task.Result.StatusCode.ToString() : "Request failed")}");
-                // Refresh the page to show updated state
                 nav.NavigateTo("/", true);
             }
         });
     }
 
-    // Add this method for booking tickets
+    
     private async Task BookTicket(int eventId)
     {
-        try
-        {
-            // Create the booking request
+        
+         
             var bookingRequest = new { EventId = eventId };
             
-            // Set up the request with credentials
+            
             var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/tickets/book");
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
             request.Content = JsonContent.Create(bookingRequest);
@@ -265,20 +260,16 @@
             
             if (response.IsSuccessStatusCode)
             {
-                // Redirect to my tickets page after successful booking
+                
                 nav.NavigateTo("/mytickets");
             }
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 Console.Error.WriteLine($"Booking failed: {response.StatusCode} - {errorContent}");
-                // You could add error handling UI here
+                
             }
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error booking ticket: {ex.Message}");
-            // You could add error handling UI here
-        }
+        
+        
     }
 }

@@ -23,20 +23,14 @@ namespace TicketToCode.Api.Endpoints.Ticket
             if (string.IsNullOrEmpty(authCookie))
             {
                 return TypedResults.BadRequest("User not authenticated");
-            }
-            
-            // Add debugging
-            Console.WriteLine($"Auth cookie: {authCookie}");
-            
+            }   
             var username = authCookie.Split(':')[0];
-            Console.WriteLine($"Username from cookie: {username}");
             
             var user = db.Users.FirstOrDefault(u => 
                 string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
                 
             if (user == null)
             {
-                Console.WriteLine($"User '{username}' not found in database");
                 return TypedResults.BadRequest("User not found");
             }
             
@@ -46,9 +40,6 @@ namespace TicketToCode.Api.Endpoints.Ticket
             var userTickets = db.Tickets
                 .Where(t => t.UserID == user.Id)
                 .ToList();
-                
-            Console.WriteLine($"Found {userTickets.Count} tickets for user ID {user.Id}");
-            
             // Map to response
             var response = userTickets
                 .Select(t =>
@@ -56,7 +47,6 @@ namespace TicketToCode.Api.Endpoints.Ticket
                     var ev = db.Events.FirstOrDefault(e => e.Id == t.EventID); 
                     if (ev == null)
                     {
-                        Console.WriteLine($"Event with ID {t.EventID} not found for ticket {t.ID}");
                         return null;
                     }
                     return new Response(
@@ -67,10 +57,9 @@ namespace TicketToCode.Api.Endpoints.Ticket
                         EventEnd: ev.EndTime
                     );
                 })
-                .Where(r => r != null) // Filter out null responses
+                .Where(r => r != null) 
                 .ToList();
 
-            Console.WriteLine($"Returning {response.Count} tickets for user '{username}'");
             return TypedResults.Ok(response);
         }
     }
