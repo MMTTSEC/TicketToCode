@@ -7,6 +7,7 @@
         {
             app
             .MapGet("/users/all", Handle)
+            .WithTags("User EndPoints")
             .WithSummary("View All Users Database");
         }
 

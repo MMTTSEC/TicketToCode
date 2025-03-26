@@ -4,6 +4,7 @@
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapPut("/users/edit/{id}", Handle)
+            .WithTags("User EndPoints")
             .WithSummary("Edit User attributes");
 
         public record Request(

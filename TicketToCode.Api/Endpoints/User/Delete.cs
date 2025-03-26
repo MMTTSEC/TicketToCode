@@ -4,6 +4,7 @@
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapDelete("/users/{id}", Handle)
+            .WithTags("User EndPoints")
             .WithSummary("Delete User");
 
         public record Request(int Id);
