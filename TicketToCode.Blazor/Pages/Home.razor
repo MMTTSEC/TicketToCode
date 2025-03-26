@@ -36,7 +36,7 @@
                     </div>
                     <h2>@eventItem.Name <span class="event-type">@eventItem.Type</span></h2>
                     <p class="event-description">@eventItem.Description</p>
-                    <p class="event-date"><span class="event-start">Event Start: @eventItem.Start</span><br /> <span class="event-end">Event End: @eventItem.End</span></p>
+                    <p class="event-date"><span class="event-start">Event Start: @eventItem.Start.ToString("yyyy-MM-dd HH:mm")</span><br /> <span class="event-end">Event End: @eventItem.End.ToString("yyyy-MM-dd HH:mm")</span></p>
                     <p class="event-attendees">
                         @if (RemainingSeats >= 0) { RemainingSeats = eventItem.MaxAttendees - eventItem.Bookings; }
                         <span class="@(RemainingSeats == 0 ? "error" : (RemainingSeats < (eventItem.MaxAttendees / 2)) ? "warning" : "success")">
