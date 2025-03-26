@@ -10,11 +10,21 @@
     <main>
         <div class="top-row px-4">
             <div id="admin-links-wrapper">
-                <a class="admin-links" href="createEvent">Create Event</a>
+                @if (userRole == "Admin")
+                {
+                    <a class="admin-links" href="createEvent">Create Event</a>
+                }
             </div>
             <div class="auth-links">
-                <a href="login">Login/Register</a>
-                <button class="btn btn-link" @onclick="Logout">Logout</button>
+                @if (string.IsNullOrEmpty(username))
+                {
+                    <a href="login">Login/Register</a>
+                }
+                else
+                {
+                    <span class="me-3">Welcome, @username!</span>
+                    <button class="btn btn-link" @onclick="Logout">Logout</button>
+                }
             </div>
         </div>
 
@@ -25,6 +35,73 @@
 </div>
 
 @code {
+    private string userRole = string.Empty;
+    private string username = string.Empty;
+    private EventHandler<LocationChangedEventArgs>? locationChangedHandler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUserRole();
+        
+        // Set up navigation event handler to refresh auth state on navigation
+        locationChangedHandler = async (sender, args) => await OnLocationChanged(args);
+        nav.LocationChanged += locationChangedHandler;
+    }
+
+    private async Task OnLocationChanged(LocationChangedEventArgs args)
+    {
+        await GetUserRole();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        // Clean up the event handler when component is disposed
+        if (locationChangedHandler != null)
+        {
+            nav.LocationChanged -= locationChangedHandler;
+        }
+    }
+
+    private async Task GetUserRole()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/auth/role");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            
+            var response = await http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var authData = await response.Content.ReadFromJsonAsync<AuthData>();
+                if (authData != null)
+                {
+                    userRole = authData.Role;
+                    username = authData.Username;
+                }
+            }
+            else
+            {
+                // Clear user data if not authenticated
+                userRole = string.Empty;
+                username = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error getting user role: {ex.Message}");
+            // Clear user data on error
+            userRole = string.Empty;
+            username = string.Empty;
+        }
+    }
+
+    private class AuthData
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
     private async Task Logout()
     {
         try
@@ -35,6 +112,8 @@
             var response = await http.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
+                userRole = string.Empty;
+                username = string.Empty;
                 nav.NavigateTo("/", true);
             }
         }
