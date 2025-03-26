@@ -191,7 +191,7 @@
     void EventBookTicketRequest(int Id, int CurrentBookings)
     {
         Console.WriteLine($"BookTicket Request to Event ID: {Id}");
-        // Send BookTicket POST Request to /events/bookticket/
+        // Send BookTicket POST Request to /tickets/book
         http.PostAsJsonAsync("https://localhost:7206/tickets/book", new { EventId = Id });
         http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{Id}", new { Bookings = CurrentBookings + 1} );
         nav.NavigateTo("/", true);
