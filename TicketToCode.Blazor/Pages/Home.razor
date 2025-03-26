@@ -43,8 +43,20 @@
                             @RemainingSeats
                             / @eventItem.MaxAttendees</span><br />Tickets Remaining
                     </p>
-                    <div class="event-buttons-wrapper">
-                        <button class="@(RemainingSeats == 0 ? "event-button-closed" : "event-button")" @onclick="() => DisplayPopup(eventItem.Id, RequestType.BookTicket, eventItem.Bookings)">@(RemainingSeats == 0 ? "Fully Booked" : "Book Ticket")</button>
+                    
+                    <div class="event-actions">
+                        @if (RemainingSeats > 0 && isAuthenticated)
+                        {
+                            <button class="btn btn-primary" @onclick="() => DisplayPopup(eventItem.Id, RequestType.BookTicket, eventItem.Bookings)">Book Ticket</button>
+                        }
+                        else if (RemainingSeats == 0)
+                        {
+                            <button class="btn btn-secondary" disabled>Sold Out</button>
+                        }
+                        else if (!isAuthenticated)
+                        {
+                            <a href="/login" class="btn btn-outline-primary">Login to Book</a>
+                        }
                     </div>
                 </div>
             }
@@ -70,10 +82,29 @@
     public string SearchQuery = "";
     public int RemainingSeats = 0;
     private List<Event> events = new List<Event>();
+    private bool isAuthenticated = false; // Add this line
 
     protected override async Task OnInitializedAsync()
     {
+        await CheckAuthentication(); // Add this line
         await GetEventsAsync();
+    }
+
+    private async Task CheckAuthentication()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/auth/role");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            
+            var response = await http.SendAsync(request);
+            isAuthenticated = response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Auth check error: {ex.Message}");
+            isAuthenticated = false;
+        }
     }
 
     private async Task AddEventsWhenLoading() {
@@ -191,9 +222,54 @@
     void EventBookTicketRequest(int Id, int CurrentBookings)
     {
         Console.WriteLine($"BookTicket Request to Event ID: {Id}");
-        // Send BookTicket POST Request to /tickets/book
-        http.PostAsJsonAsync("https://localhost:7206/tickets/book", new { EventId = Id });
-        http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{Id}", new { Bookings = CurrentBookings + 1} );
-        nav.NavigateTo("/", true);
+        
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/tickets/book");
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        request.Content = JsonContent.Create(new { EventId = Id });
+        
+        // Send the request
+        http.SendAsync(request).ContinueWith(task => {
+            if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode)
+            {
+                http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{Id}", new { Bookings = CurrentBookings + 1 });
+                
+                nav.NavigateTo("/mytickets", true);
+            }
+            else
+            {
+                Console.Error.WriteLine($"Booking failed: {(task.IsCompletedSuccessfully ? task.Result.StatusCode.ToString() : "Request failed")}");
+                nav.NavigateTo("/", true);
+            }
+        });
+    }
+
+    
+    private async Task BookTicket(int eventId)
+    {
+        
+         
+            var bookingRequest = new { EventId = eventId };
+            
+            
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/tickets/book");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            request.Content = JsonContent.Create(bookingRequest);
+            
+            // Send the request
+            var response = await http.SendAsync(request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                
+                nav.NavigateTo("/mytickets");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.Error.WriteLine($"Booking failed: {response.StatusCode} - {errorContent}");
+                
+            }
+        
+        
     }
 }
