@@ -128,7 +128,6 @@
     }
 
     // Popup Methods
-    public string CurrentUser = "Test";
     public bool ShowPopup = false;
     public string PopupTitle = "Are you sure?";
     public RequestType PostRequestType = RequestType.None;
@@ -161,7 +160,7 @@
         }
         if (PostRequestType == RequestType.BookTicket)
         {
-            EventBookTicketRequest(PostRequestId, CurrentUser, PostRequestBookings);
+            EventBookTicketRequest(PostRequestId, PostRequestBookings);
         }
         ShowPopup = false;
     }
@@ -189,11 +188,11 @@
         nav.NavigateTo("/", true);
     }
 
-    void EventBookTicketRequest(int Id, string User, int CurrentBookings)
+    void EventBookTicketRequest(int Id, int CurrentBookings)
     {
-        Console.WriteLine($"BookTicket Request to Event ID: {Id} for user {User}");
+        Console.WriteLine($"BookTicket Request to Event ID: {Id}");
         // Send BookTicket POST Request to /events/bookticket/
-        //http.PostAsJsonAsync("https://localhost:7206/events/bookticket/", new { id = Id, name = User });
+        http.PostAsJsonAsync("https://localhost:7206/tickets/book", new { EventId = Id });
         http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{Id}", new { Bookings = CurrentBookings + 1} );
         nav.NavigateTo("/", true);
     }
