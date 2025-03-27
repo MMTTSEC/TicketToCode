@@ -36,6 +36,10 @@
                                 <label for="password" class="form-label">Password</label>
                                 <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
                             </div>
+                            @if (!string.IsNullOrEmpty(loginErrorMessage))
+                            {
+                                <div class="alert alert-danger mt-2 mb-3">@loginErrorMessage</div>
+                            }
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Login</button>
                             </div>
@@ -61,6 +65,10 @@
                                     <div class="text-danger mt-1">@passwordMatchError</div>
                                 }
                             </div>
+                            @if (!string.IsNullOrEmpty(registerErrorMessage))
+                            {
+                                <div class="alert alert-danger mt-2 mb-3">@registerErrorMessage</div>
+                            }
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Register</button>
                             </div>
@@ -75,6 +83,8 @@
 @code {
     private string activeTab = "login";
     private string passwordMatchError = string.Empty;
+    private string loginErrorMessage = string.Empty;
+    private string registerErrorMessage = string.Empty;
 
     private class LoginModel
     {
@@ -96,10 +106,12 @@
     {
         try
         {
+            loginErrorMessage = string.Empty;
+            
             var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/login");
             request.Content = JsonContent.Create(new { Username = loginModel.Username, Password = loginModel.Password });
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
+    
             var response = await http.SendAsync(request);
             
             if (response.IsSuccessStatusCode)
@@ -109,23 +121,31 @@
             }
             else
             {
+                // Read the error content safely
                 var errorContent = await response.Content.ReadAsStringAsync();
-                Console.Error.WriteLine($"Login error: {errorContent}");
+                
+                try
+                {
+                    
+                    var errorObj = System.Text.Json.JsonSerializer.Deserialize<ErrorResponse>(errorContent);
+                    loginErrorMessage = errorObj?.Message ?? "Invalid username or password";
+                }
+                catch
+                {
+                    
+                    loginErrorMessage = !string.IsNullOrWhiteSpace(errorContent) ? 
+                        errorContent.Trim('"') : "Invalid username or password";
+                }
+                
+                Console.Error.WriteLine($"Login error: {loginErrorMessage}");
             }
         }
         catch (Exception ex)
         {
+            loginErrorMessage = "An error occurred during login";
             Console.Error.WriteLine($"Login exception: {ex}");
         }
     }
-
-    // Remove any AuthData class that might reference localStorage
-    // private class AuthData
-    // {
-    //     public string Role { get; set; }
-    //     public string Token { get; set; }
-    //     public DateTime Expiration { get; set; }
-    // }
 
     async Task RegisterFormMethod()
     {
@@ -136,15 +156,16 @@
         }
         
         passwordMatchError = string.Empty;
+        registerErrorMessage = string.Empty;
         
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/register");
             request.Content = JsonContent.Create(new { Username = registerModel.Username, Password = registerModel.Password });
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
+    
             var response = await http.SendAsync(request);
-
+    
             if (response.IsSuccessStatusCode)
             {
                 // After successful registration, switch to login tab
@@ -154,13 +175,35 @@
             }
             else
             {
+                
                 var errorContent = await response.Content.ReadAsStringAsync();
-                Console.Error.WriteLine($"Registration error: {errorContent}");
+                
+                try
+                {
+                    
+                    var errorObj = System.Text.Json.JsonSerializer.Deserialize<ErrorResponse>(errorContent);
+                    registerErrorMessage = errorObj?.Message ?? "Username already exists";
+                }
+                catch
+                {
+                    
+                    registerErrorMessage = !string.IsNullOrWhiteSpace(errorContent) ? 
+                        errorContent.Trim('"') : "Username already exists";
+                }
+                
+                Console.Error.WriteLine($"Registration error: {registerErrorMessage}");
             }
         }
         catch (Exception ex)
         {
+            registerErrorMessage = "An error occurred during registration";
             Console.Error.WriteLine($"Registration exception: {ex}");
         }
+    }
+    
+    
+    private class ErrorResponse
+    {
+        public string Message { get; set; } = string.Empty;
     }
 }
