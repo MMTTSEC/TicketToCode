@@ -16,6 +16,9 @@
             {
                 SearchResultsFound++;
                 <div id="event-@eventItem.Id" class="event-card">
+                    @if (userrole != null && userrole.role == "Admin")
+                    {
+                        
                     <div class="admin-options">
                         <a href="/editevent?eventid=@eventItem.Id&eventname=@eventItem.Name&eventdescription=@eventItem.Description&eventtype=@eventItem.Type&eventstarttime=@eventItem.Start&eventendtime=@eventItem.End&eventmaxattendees=@eventItem.MaxAttendees" class="crud-update">
                             <span>
@@ -34,6 +37,7 @@
                             </span>
                         </a>
                     </div>
+                    }
                     <h2>@eventItem.Name <span class="event-type">@eventItem.Type</span></h2>
                     <p class="event-description">@eventItem.Description</p>
                     <p class="event-date"><span class="event-start">Event Start: @eventItem.Start.ToString("yyyy-MM-dd HH:mm")</span><br /> <span class="event-end">Event End: @eventItem.End.ToString("yyyy-MM-dd HH:mm")</span></p>
@@ -83,6 +87,7 @@
     public int RemainingSeats = 0;
     private List<Event> events = new List<Event>();
     private bool isAuthenticated = false; // Add this line
+    private UserRole? userrole;
 
     protected override async Task OnInitializedAsync()
     {
@@ -99,6 +104,10 @@
             
             var response = await http.SendAsync(request);
             isAuthenticated = response.IsSuccessStatusCode;
+            if (response.IsSuccessStatusCode)
+            {
+                userrole = await response.Content.ReadFromJsonAsync<UserRole>();
+            }
         }
         catch (Exception ex)
         {
@@ -144,6 +153,12 @@
         public DateTime End { get; set; }
         public int MaxAttendees { get; set; }
         public int Bookings { get; set; }
+    }
+
+    private class UserRole
+    {
+        public string username { get; set; }
+        public string role { get; set; }
     }
 
     public enum EventType
