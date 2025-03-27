@@ -31,13 +31,14 @@
 
             if (request.username != null)
             {
-                var existingUser = db.Users.FirstOrDefault(user => user.Username == request.username);
+                var existingUser = db.Users.FirstOrDefault(user => user.Username == request.username && user.Id != request.Id);
                 if (existingUser != null)
                 {
                     return TypedResults.BadRequest("Username already exists");
                 }
                 u.Username = request.username;
             }
+
             if (request.role != null)
             {
                 var roleValues = typeof(UserRoles)
