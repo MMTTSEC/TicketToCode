@@ -111,7 +111,7 @@
             var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/login");
             request.Content = JsonContent.Create(new { Username = loginModel.Username, Password = loginModel.Password });
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-    
+
             var response = await http.SendAsync(request);
             
             if (response.IsSuccessStatusCode)
@@ -121,23 +121,9 @@
             }
             else
             {
-                // Read the error content safely
                 var errorContent = await response.Content.ReadAsStringAsync();
-                
-                try
-                {
-                    
-                    var errorObj = System.Text.Json.JsonSerializer.Deserialize<ErrorResponse>(errorContent);
-                    loginErrorMessage = errorObj?.Message ?? "Invalid username or password";
-                }
-                catch
-                {
-                    
-                    loginErrorMessage = !string.IsNullOrWhiteSpace(errorContent) ? 
-                        errorContent.Trim('"') : "Invalid username or password";
-                }
-                
-                Console.Error.WriteLine($"Login error: {loginErrorMessage}");
+                loginErrorMessage = "Invalid username or password";
+                Console.Error.WriteLine($"Login error: {errorContent}");
             }
         }
         catch (Exception ex)
@@ -163,9 +149,9 @@
             var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/register");
             request.Content = JsonContent.Create(new { Username = registerModel.Username, Password = registerModel.Password });
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-    
+
             var response = await http.SendAsync(request);
-    
+
             if (response.IsSuccessStatusCode)
             {
                 // After successful registration, switch to login tab
@@ -175,23 +161,9 @@
             }
             else
             {
-                
                 var errorContent = await response.Content.ReadAsStringAsync();
-                
-                try
-                {
-                    
-                    var errorObj = System.Text.Json.JsonSerializer.Deserialize<ErrorResponse>(errorContent);
-                    registerErrorMessage = errorObj?.Message ?? "Username already exists";
-                }
-                catch
-                {
-                    
-                    registerErrorMessage = !string.IsNullOrWhiteSpace(errorContent) ? 
-                        errorContent.Trim('"') : "Username already exists";
-                }
-                
-                Console.Error.WriteLine($"Registration error: {registerErrorMessage}");
+                registerErrorMessage = "Username already exists";
+                Console.Error.WriteLine($"Registration error: {errorContent}");
             }
         }
         catch (Exception ex)
@@ -199,11 +171,5 @@
             registerErrorMessage = "An error occurred during registration";
             Console.Error.WriteLine($"Registration exception: {ex}");
         }
-    }
-    
-    
-    private class ErrorResponse
-    {
-        public string Message { get; set; } = string.Empty;
     }
 }
