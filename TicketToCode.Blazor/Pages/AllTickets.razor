@@ -1,6 +1,7 @@
 ﻿@page "/alltickets"
 @inject NavigationManager nav
 @inject HttpClient http
+@inject TicketToCode.Blazor.Services.AuthService authService
 
 <h1>All Tickets</h1>
 @if (error != null)
@@ -17,23 +18,28 @@ else if (!tickets.Any())
 }
 else
 {
-    @foreach (var eventItem in events) {
+    @foreach (var eventItem in events)
+    {
         <div class="container mt-4">
-            <h2 style="color: #4d2965;"><span style="color:#591487; font-size: 2rem; font-weight: bold;;">#@eventItem.Id</span> @eventItem.Name</h2>
+            <h2 style="color: #4d2965;"><span style="color:#591487; font-size: 2rem; font-weight: bold;;">#@eventItem.Id</span>
+                @eventItem.Name</h2>
             <div class="row g-4">
                 @foreach (var ticket in tickets)
                 {
-                    @if (ticket.EventId == eventItem.Id) {
+                    @if (ticket.EventId == eventItem.Id)
+                    {
                         <div class="col-md-6">
                             <div class="ticket-card">
-                            <button class="cancel-ticket" @onclick="() => CancelTicket(ticket.TicketId, eventItem.Id, eventItem.Bookings)" title="Cancel Ticket">
-                                ❌
-                            </button>
-                            <div class="ticket-header">@eventItem.Name</div>
-                            <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
-                            <p><strong>Event ID:</strong> @ticket.EventId</p>
+                                <button class="cancel-ticket"
+                                    @onclick="() => CancelTicket(ticket.TicketId, eventItem.Id, eventItem.Bookings)"
+                                    title="Cancel Ticket">
+                                    ❌
+                                </button>
+                                <div class="ticket-header">@eventItem.Name</div>
+                                <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
+                                <p><strong>Event ID:</strong> @ticket.EventId</p>
+                            </div>
                         </div>
-                    </div>
                     }
                 }
             </div>
@@ -44,22 +50,76 @@ else
 @code {
     private List<Event> events = new List<Event>();
     private List<TicketResponse>? tickets;
+    private string? error;
+    private bool isAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // First, check if the user is authenticated and is an admin
+        await CheckAdminAccess();
+        if (isAdmin)
+        {
+            await GetEventsAsync();
+            await LoadTickets();
+        }
+        else
+        {
+            nav.NavigateTo("/"); // Redirect to home page if not admin
+        }
+    }
+
+    private async Task CheckAdminAccess()
+    {
+        try
+        {
+            // Check if user is authenticated and is admin
+            isAdmin = await authService.IsAuthenticatedAsync() &&
+            (await authService.GetUserRoleAsync()) == "Admin";
+
+            if (!isAdmin)
+            {
+                error = "You need administrator privileges to access this page.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Auth check error: {ex.Message}");
+            isAdmin = false;
+        }
+    }
 
     private async Task GetEventsAsync()
     {
         try
         {
-            // Call your API and deserialize the response into the 'events' list
-            events = await http.GetFromJsonAsync<List<Event>>("https://localhost:7206/events");
+            // Use AuthService to create an authorized request
+            var request = await authService.CreateAuthorizedRequestMessage(
+            HttpMethod.Get, "https://localhost:7206/events");
 
-            // You can log the data or inspect if needed
-            Console.WriteLine($"Events fetched: {events.Count}");
+            var response = await http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                events = await response.Content.ReadFromJsonAsync<List<Event>>() ?? new List<Event>();
+                Console.WriteLine($"Events fetched: {events.Count}");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
+            }
+            else
+            {
+                error = $"Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching events: {ex.Message}");
+            error = $"Error fetching events: {ex.Message}";
+            Console.Error.WriteLine($"Error fetching events: {ex.Message}");
         }
     }
+
     public class Event
     {
         public int Id { get; set; }
@@ -69,25 +129,24 @@ else
         public int Bookings { get; set; }
     }
 
-    private string? error;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await GetEventsAsync();
-        await LoadTickets();
-    }
-
     private async Task LoadTickets()
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/tickets/all");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            // Use AuthService to create an authorized request
+            var request = await authService.CreateAuthorizedRequestMessage(
+            HttpMethod.Get, "https://localhost:7206/tickets/all");
 
             var response = await http.SendAsync(request);
+
             if (response.IsSuccessStatusCode)
             {
                 tickets = await response.Content.ReadFromJsonAsync<List<TicketResponse>>();
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
             }
             else
             {
@@ -105,14 +164,28 @@ else
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"https://localhost:7206/tickets/{ticketId}");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            // Use AuthService to create an authorized request
+            var request = await authService.CreateAuthorizedRequestMessage(
+            HttpMethod.Delete, $"https://localhost:7206/tickets/{ticketId}");
 
             var response = await http.SendAsync(request);
+
             if (response.IsSuccessStatusCode)
             {
-                http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{eventId}", new { Bookings = CurrentBookings - 1 });
+                // Create authorized request for updating booking count
+                var updateRequest = await authService.CreateAuthorizedRequestMessage(
+                HttpMethod.Put, $"https://localhost:7206/events/updatebooking/{eventId}");
+
+                updateRequest.Content = JsonContent.Create(new { Bookings = CurrentBookings - 1 });
+                await http.SendAsync(updateRequest);
+
+                // Refresh the page
                 nav.NavigateTo("/alltickets", true);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
             }
             else
             {
@@ -130,5 +203,6 @@ else
     {
         public int TicketId { get; set; }
         public int EventId { get; set; }
+        public int UserId { get; set; }
     }
 }

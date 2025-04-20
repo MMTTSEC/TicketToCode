@@ -1,6 +1,6 @@
 ﻿@page "/login"
 @inject NavigationManager nav
-@inject HttpClient http
+@inject TicketToCode.Blazor.Services.AuthService authService
 
 <PageTitle>Login</PageTitle>
 
@@ -19,7 +19,6 @@
                                     @onclick='() => activeTab = "register"'>
                                 Register
                             </button>
-
                         </li>
                     </ul>
                 </div>
@@ -108,22 +107,15 @@
         {
             loginErrorMessage = string.Empty;
             
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/login");
-            request.Content = JsonContent.Create(new { Username = loginModel.Username, Password = loginModel.Password });
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
-            var response = await http.SendAsync(request);
+            var success = await authService.LoginAsync(loginModel.Username, loginModel.Password);
             
-            if (response.IsSuccessStatusCode)
+            if (success)
             {
-                // The cookie is set by the server, so we just need to navigate
                 nav.NavigateTo("/", true);
             }
             else
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
                 loginErrorMessage = "Invalid username or password";
-                Console.Error.WriteLine($"Login error: {errorContent}");
             }
         }
         catch (Exception ex)
@@ -148,8 +140,8 @@
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/register");
             request.Content = JsonContent.Create(new { Username = registerModel.Username, Password = registerModel.Password });
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
 
+            var http = new HttpClient();
             var response = await http.SendAsync(request);
 
             if (response.IsSuccessStatusCode)

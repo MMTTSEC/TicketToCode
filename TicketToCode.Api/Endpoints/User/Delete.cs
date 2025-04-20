@@ -1,11 +1,14 @@
-﻿namespace TicketToCode.Api.Endpoints.User
+﻿using Microsoft.AspNetCore.Authorization;
+
+namespace TicketToCode.Api.Endpoints.User
 {
     public class Delete : IEndpoint
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapDelete("/users/{id}", Handle)
             .WithTags("User EndPoints")
-            .WithSummary("Delete User");
+            .WithSummary("Delete User")
+            .RequireAuthorization(policy => policy.RequireRole("Admin")); // Require Admin role
 
         public record Request(int Id);
         public record Response(int Id);
@@ -16,8 +19,5 @@
             db.Users.Remove(u);
             return new Response(u.Id);
         }
-
-
-
     }
 }

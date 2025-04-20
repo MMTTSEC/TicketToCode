@@ -1,6 +1,7 @@
 ﻿@page "/stats"
 @inject NavigationManager nav
 @inject HttpClient http
+@inject TicketToCode.Blazor.Services.AuthService authService
 
 <PageTitle>Statistics</PageTitle>
 
@@ -120,18 +121,13 @@ else
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/auth/role");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            
-            var response = await http.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            // Use AuthService instead of calling /auth/role endpoint
+            isAdmin = await authService.IsAuthenticatedAsync() &&
+            (await authService.GetUserRoleAsync()) == "Admin";
+
+            if (!isAdmin)
             {
-                var authData = await response.Content.ReadFromJsonAsync<AuthResponse>();
-                isAdmin = authData?.Role?.Equals("Admin", StringComparison.OrdinalIgnoreCase) ?? false;
-            }
-            else
-            {
-                isAdmin = false;
+                nav.NavigateTo("/"); // Redirect non-admins to home page
             }
         }
         catch (Exception ex)
@@ -141,20 +137,16 @@ else
         }
     }
 
-    private class AuthResponse
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
-
     private async Task GetStats()
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/tickets/stats");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            // Use AuthService to create an authorized request
+            var request = await authService.CreateAuthorizedRequestMessage(
+            HttpMethod.Get, "https://localhost:7206/tickets/stats");
 
             var response = await http.SendAsync(request);
+
             if (response.IsSuccessStatusCode)
             {
                 var jsonResponse = await response.Content.ReadAsStringAsync();
@@ -162,6 +154,12 @@ else
 
                 ticketStats = await response.Content.ReadFromJsonAsync<TicketStats>();
                 Console.WriteLine("Deserialized Stats: " + ticketStats);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                // Handle unauthorized access
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
             }
             else
             {

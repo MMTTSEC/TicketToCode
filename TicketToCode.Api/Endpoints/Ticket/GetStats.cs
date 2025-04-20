@@ -1,4 +1,7 @@
-﻿namespace TicketToCode.Api.Endpoints.Ticket
+﻿using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+
+namespace TicketToCode.Api.Endpoints.Ticket
 {
     public class GetStats : IEndpoint
     {
@@ -6,8 +9,8 @@
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapGet("/tickets/stats", Handle)
             .WithTags("Ticket EndPoints")
-            .WithSummary("Get statistics for all tickets (admin)");
-        // .RequireAuthorization() commented out for testing
+            .WithSummary("Get statistics for all tickets (admin)")
+            .RequireAuthorization(policy => policy.RequireRole("Admin")); // Require Admin role
 
         // Response model
         public record Response(
@@ -22,23 +25,7 @@
             IDatabase db,
             HttpContext context)
         {
-           
-
-            
-            // Authentication check 
-            var authCookie = context.Request.Cookies["auth"];
-            if (string.IsNullOrEmpty(authCookie))
-            {
-                return TypedResults.BadRequest("User not authenticated");
-            }
-            var username = authCookie.Split(':')[0];
-            var role = authCookie.Split(':')[1];
-            var user = db.Users.FirstOrDefault(u => u.Username == username);
-            if (user == null || role != "Admin")
-            {
-                return TypedResults.BadRequest("Admin access required");
-            }
-            
+            // JWT authentication is handled by the RequireAuthorization attribute with role check
 
             // Calculate ticket statistics
             var totalTickets = db.Tickets.Count;

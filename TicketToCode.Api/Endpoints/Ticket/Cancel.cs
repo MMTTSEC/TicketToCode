@@ -1,4 +1,6 @@
 ﻿using System.Reflection.Metadata;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace TicketToCode.Api.Endpoints.Ticket
 {
@@ -8,11 +10,11 @@ namespace TicketToCode.Api.Endpoints.Ticket
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapDelete("/tickets/{id}", Handle)
             .WithTags("Ticket EndPoints")
-            .WithSummary("Cancel a ticket for an event for the authenticated user");
-     
+            .WithSummary("Cancel a ticket for an event for the authenticated user")
+            .RequireAuthorization(); // Require authentication
 
         // Request and Response models
-        public record Request(int Id); 
+        public record Request(int Id);
         public record Response(int TicketId);
 
         // Logic
@@ -21,25 +23,21 @@ namespace TicketToCode.Api.Endpoints.Ticket
             IDatabase db,
             HttpContext context)
         {
-            //int userId = 1; // Temporary hardcoded user ID for testing
-
-            
-            // Authentication check commented out for testing
-            var authCookie = context.Request.Cookies["auth"];
-            if (string.IsNullOrEmpty(authCookie))
+            // Get user from the JWT token claims
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var userIdInt))
             {
-                return TypedResults.BadRequest("User not authenticated");
+                return TypedResults.BadRequest("User not authenticated or invalid user ID");
             }
-            var username = authCookie.Split(':')[0];
-            var user = db.Users.FirstOrDefault(u => u.Username == username);
+
+            var user = db.Users.FirstOrDefault(u => u.Id == userIdInt);
             if (user == null)
             {
                 return TypedResults.BadRequest("User not found");
             }
-            
 
             // Find the ticket
-            var ticket = db.Tickets.FirstOrDefault(t => t.ID == request.Id && t.UserID == user.Id);
+            var ticket = db.Tickets.FirstOrDefault(t => t.ID == request.Id && t.UserID == userIdInt);
             if (ticket == null)
             {
                 return TypedResults.NotFound($"Ticket with ID {request.Id} not found or does not belong to user");
@@ -51,6 +49,5 @@ namespace TicketToCode.Api.Endpoints.Ticket
             // Return the canceled ticket ID
             return TypedResults.Ok(new Response(ticket.ID));
         }
-
     }
 }

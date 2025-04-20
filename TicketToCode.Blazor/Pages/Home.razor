@@ -1,6 +1,7 @@
 ﻿@page "/"
 @inject NavigationManager nav
 @inject HttpClient http
+@inject TicketToCode.Blazor.Services.AuthService authService
 
 <PageTitle>Home</PageTitle>
 
@@ -16,7 +17,7 @@
             {
                 SearchResultsFound++;
                 <div id="event-@eventItem.Id" class="event-card">
-                    @if (userrole != null && userrole.role == "Admin")
+                    @if (userRole != null && userRole == "Admin")
                     {
 
                         <div class="admin-options">
@@ -33,7 +34,7 @@
                                 <span>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                                         <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
-                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
                                     </svg>
                                 </span>
                             </a>
@@ -50,6 +51,10 @@
                     </p>
 
                     <div class="event-actions">
+                        @{
+                            RemainingSeats = eventItem.MaxAttendees - eventItem.Bookings;
+                        }
+                        
                         @if (RemainingSeats > 0 && isAuthenticated)
                         {
                             <button class="btn btn-primary" @onclick="() => DisplayPopup(eventItem.Id, RequestType.BookTicket, eventItem.Bookings)">Book Ticket</button>
@@ -87,12 +92,12 @@
     public string SearchQuery = "";
     public int RemainingSeats = 0;
     private List<Event> events = new List<Event>();
-    private bool isAuthenticated = false; // Add this line
-    private UserRole? userrole;
+    private bool isAuthenticated = false;
+    private string userRole = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        await CheckAuthentication(); // Add this line
+        await CheckAuthentication();
         await GetEventsAsync();
     }
 
@@ -100,14 +105,16 @@
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/auth/role");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
-            var response = await http.SendAsync(request);
-            isAuthenticated = response.IsSuccessStatusCode;
-            if (response.IsSuccessStatusCode)
+            // Use AuthService instead of calling /auth/role endpoint
+            isAuthenticated = await authService.IsAuthenticatedAsync();
+            if (isAuthenticated)
             {
-                userrole = await response.Content.ReadFromJsonAsync<UserRole>();
+                userRole = await authService.GetUserRoleAsync();
+                Console.WriteLine($"User authenticated with role: {userRole}");
+            }
+            else
+            {
+                Console.WriteLine("User not authenticated");
             }
         }
         catch (Exception ex)
@@ -237,13 +244,18 @@
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://localhost:7206/tickets/event/{eventId}");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
+            var request = await authService.CreateAuthorizedRequestMessage(
+                HttpMethod.Get, $"https://localhost:7206/tickets/event/{eventId}");
+            
             var response = await http.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 tickets = await response.Content.ReadFromJsonAsync<List<TicketResponse>>();
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
             }
             else
             {
@@ -261,68 +273,67 @@
     {
         Console.WriteLine($"Delete Request to Event ID: {Id}");
         await LoadTickets(Id);
-        foreach (var ticket in tickets)
+        
+        if (tickets != null)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"https://localhost:7206/tickets/{ticket.TicketId}");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            await http.SendAsync(request);
+            foreach (var ticket in tickets)
+            {
+                var deleteTicketRequest = await authService.CreateAuthorizedRequestMessage(
+                    HttpMethod.Delete, $"https://localhost:7206/tickets/{ticket.TicketId}");
+                
+                await http.SendAsync(deleteTicketRequest);
+            }
         }
-        // Send Delete POST Request to /events/delete/
-        await http.DeleteAsync("https://localhost:7206/events/delete/" + Convert.ToInt32(Id));
+        
+        // Delete the event
+        var deleteEventRequest = await authService.CreateAuthorizedRequestMessage(
+            HttpMethod.Delete, $"https://localhost:7206/events/delete/{Id}");
+        
+        await http.SendAsync(deleteEventRequest);
+        
         nav.NavigateTo("/", true);
     }
 
-    void EventBookTicketRequest(int Id, int CurrentBookings)
+    async Task EventBookTicketRequest(int Id, int CurrentBookings)
     {
         Console.WriteLine($"BookTicket Request to Event ID: {Id}");
-        
-        var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/tickets/book");
-        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-        request.Content = JsonContent.Create(new { EventId = Id });
-        
-        // Send the request
-        http.SendAsync(request).ContinueWith(task => {
-            if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode)
-            {
-                http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{Id}", new { Bookings = CurrentBookings + 1 });
-                
-                nav.NavigateTo("/mytickets", true);
-            }
-            else
-            {
-                Console.Error.WriteLine($"Booking failed: {(task.IsCompletedSuccessfully ? task.Result.StatusCode.ToString() : "Request failed")}");
-                nav.NavigateTo("/", true);
-            }
-        });
+        await BookTicket(Id);
     }
 
-    
     private async Task BookTicket(int eventId)
     {
-        
-         
+        try
+        {
+            // Get request with auth token
+            var request = await authService.CreateAuthorizedRequestMessage(
+                HttpMethod.Post, "https://localhost:7206/tickets/book");
+            
             var bookingRequest = new { EventId = eventId };
-            
-            
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/tickets/book");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
             request.Content = JsonContent.Create(bookingRequest);
             
-            // Send the request
             var response = await http.SendAsync(request);
             
             if (response.IsSuccessStatusCode)
             {
-                
+                // After successful booking, navigate to MyTickets page
                 nav.NavigateTo("/mytickets");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                // Redirect to login if unauthorized
+                await authService.LogoutAsync(); // Clear invalid token
+                nav.NavigateTo("/login");
             }
             else
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.Error.WriteLine($"Booking failed: {response.StatusCode} - {errorContent}");
-                
+                Console.Error.WriteLine($"Booking error: {response.StatusCode}");
+                await response.Content.ReadAsStringAsync().ContinueWith(task => 
+                    Console.Error.WriteLine($"Response content: {task.Result}"));
             }
-        
-        
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Exception in BookTicket: {ex.Message}");
+        }
     }
 }

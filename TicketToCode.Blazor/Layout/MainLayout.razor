@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager nav
-@inject HttpClient http
+@inject TicketToCode.Blazor.Services.AuthService authService
+@implements IDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -41,8 +42,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await GetUserRole();
-        
+        await UpdateAuthState();
+
         // Set up navigation event handler to refresh auth state on navigation
         locationChangedHandler = async (sender, args) => await OnLocationChanged(args);
         nav.LocationChanged += locationChangedHandler;
@@ -50,7 +51,7 @@
 
     private async Task OnLocationChanged(LocationChangedEventArgs args)
     {
-        await GetUserRole();
+        await UpdateAuthState();
         StateHasChanged();
     }
 
@@ -63,63 +64,26 @@
         }
     }
 
-    private async Task GetUserRole()
+    private async Task UpdateAuthState()
     {
-        try
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/auth/role");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            
-            var response = await http.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var authData = await response.Content.ReadFromJsonAsync<AuthData>();
-                if (authData != null)
-                {
-                    userRole = authData.Role;
-                    username = authData.Username;
-                }
-            }
-            else
-            {
-                // Clear user data if not authenticated
-                userRole = string.Empty;
-                username = string.Empty;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error getting user role: {ex.Message}");
-            // Clear user data on error
-            userRole = string.Empty;
-            username = string.Empty;
-        }
-    }
+        var isAuthenticated = await authService.IsAuthenticatedAsync();
 
-    private class AuthData
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
+        if (isAuthenticated)
+        {
+            username = await authService.GetUsernameAsync();
+            userRole = await authService.GetUserRoleAsync();
+        }
+        else
+        {
+            username = string.Empty;
+            userRole = string.Empty;
+        }
     }
 
     private async Task Logout()
     {
-        try
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7206/auth/logout");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            
-            var response = await http.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                userRole = string.Empty;
-                username = string.Empty;
-                nav.NavigateTo("/", true);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Logout exception: {ex}");
-        }
+        await authService.LogoutAsync();
+        await UpdateAuthState();
+        nav.NavigateTo("/", true);
     }
 }

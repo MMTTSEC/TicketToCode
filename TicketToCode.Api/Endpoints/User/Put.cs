@@ -1,11 +1,14 @@
-﻿namespace TicketToCode.Api.Endpoints.User
+﻿using Microsoft.AspNetCore.Authorization;
+
+namespace TicketToCode.Api.Endpoints.User
 {
     public class Put : IEndpoint
     {
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapPut("/users/edit/{id}", Handle)
             .WithTags("User EndPoints")
-            .WithSummary("Edit User attributes");
+            .WithSummary("Edit User attributes")
+            .RequireAuthorization(policy => policy.RequireRole("Admin")); // Require Admin role
 
         public record Request(
             int Id,
@@ -22,7 +25,6 @@
 
         private static IResult Handle(Request request, IDatabase db)
         {
-
             var u = db.Users.Find(u => u.Id == request.Id);
             if (u == null)
             {
@@ -64,7 +66,7 @@
                 db.Users[index] = u;
             }
 
-            var response = new Response(u.Id, u.Username, u.Role, u.CreatedAt); 
+            var response = new Response(u.Id, u.Username, u.Role, u.CreatedAt);
 
             return TypedResults.Ok(response);
         }

@@ -1,4 +1,6 @@
-﻿namespace TicketToCode.Api.Endpoints.Ticket
+﻿using Microsoft.AspNetCore.Authorization;
+
+namespace TicketToCode.Api.Endpoints.Ticket
 {
     public class GetAllForEvent : IEndpoint
     {
@@ -6,32 +8,20 @@
         public static void MapEndpoint(IEndpointRouteBuilder app) => app
             .MapGet("/tickets/event/{eventId}", Handle)
             .WithTags("Ticket EndPoints")
-            .WithSummary("Get all tickets for an event.(admin)");
-        //.RequireAuthorization();
+            .WithSummary("Get all tickets for an event (admin)")
+            .RequireAuthorization(policy => policy.RequireRole("Admin")); // Require Admin role
 
         // Request and Response types
         public record Request(int EventId);
         public record Response(int TicketId, int UserId, string Username);
 
         // Logic
-        private static Results<Ok<List<Response>>, NotFound<string>, BadRequest<string>> Handle(
+        private static Results<Ok<List<Response>>, NotFound<string>> Handle(
             [AsParameters] Request request,
             IDatabase db,
             HttpContext context)
         {
-            // Authentication check
-            var authCookie = context.Request.Cookies["auth"];
-            if (string.IsNullOrEmpty(authCookie))
-            {
-                return TypedResults.BadRequest("User not authenticated");
-            }
-            var username = authCookie.Split(':')[0];
-            var role = authCookie.Split(':')[1];
-            var user = db.Users.FirstOrDefault(u => u.Username == username);
-            if (user == null || role != "Admin")
-            {
-                return TypedResults.BadRequest("Admin access required");
-            }
+            // JWT authentication is handled by the RequireAuthorization attribute with role check
 
             // Check if the event exists
             var eventExists = db.Events.Any(e => e.Id == request.EventId);
@@ -57,5 +47,4 @@
             return TypedResults.Ok(eventTickets);
         }
     }
-    
 }

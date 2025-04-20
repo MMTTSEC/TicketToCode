@@ -1,6 +1,7 @@
 ﻿@page "/mytickets"
 @inject NavigationManager nav
 @inject HttpClient http
+@inject TicketToCode.Blazor.Services.AuthService authService
 
 <h1>My Tickets</h1>
 @if (error != null)
@@ -44,26 +45,43 @@ else
     private List<TicketResponse>? tickets;
     private string? error;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await authService.IsAuthenticatedAsync();
+        if (!isAuthenticated)
+        {
+            nav.NavigateTo("/login");
+            return;
+        }
+
+        await GetEventsAsync();
+        await LoadTickets();
+    }
+
     private async Task GetEventsAsync()
     {
         try
         {
-            // Call your API and deserialize the response into the 'events' list
-            events = await http.GetFromJsonAsync<List<Event>>("https://localhost:7206/events");
-
-            // You can log the data or inspect if needed
-            Console.WriteLine($"Events fetched: {events.Count}");
+            var request = await authService.CreateAuthorizedRequestMessage(
+                HttpMethod.Get, "https://localhost:7206/events");
+            
+            var response = await http.SendAsync(request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                events = await response.Content.ReadFromJsonAsync<List<Event>>() ?? new List<Event>();
+                Console.WriteLine($"Events fetched: {events.Count}");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching events: {ex.Message}");
         }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await GetEventsAsync();
-        await LoadTickets();
     }
 
     public class Event
@@ -76,13 +94,19 @@ else
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/tickets/my-tickets");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
+            var request = await authService.CreateAuthorizedRequestMessage(
+                HttpMethod.Get, "https://localhost:7206/tickets/my-tickets");
+            
             var response = await http.SendAsync(request);
+            
             if (response.IsSuccessStatusCode)
             {
                 tickets = await response.Content.ReadFromJsonAsync<List<TicketResponse>>();
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
             }
             else
             {
@@ -100,15 +124,27 @@ else
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"https://localhost:7206/tickets/{ticketId}");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
+            var request = await authService.CreateAuthorizedRequestMessage(
+                HttpMethod.Delete, $"https://localhost:7206/tickets/{ticketId}");
+            
             var response = await http.SendAsync(request);
+            
             if (response.IsSuccessStatusCode)
             {
-                var CurrentBookings = events.Find(i => i.Id == eventId).Bookings;
-                http.PutAsJsonAsync($"https://localhost:7206/events/updatebooking/{eventId}", new { Bookings = CurrentBookings - 1 });
+                var CurrentBookings = events.Find(i => i.Id == eventId)?.Bookings ?? 0;
+                
+                var updateRequest = await authService.CreateAuthorizedRequestMessage(
+                    HttpMethod.Put, $"https://localhost:7206/events/updatebooking/{eventId}");
+                
+                updateRequest.Content = JsonContent.Create(new { Bookings = CurrentBookings - 1 });
+                await http.SendAsync(updateRequest);
+                
                 await LoadTickets(); // Reload the tickets list
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
             }
             else
             {
@@ -126,7 +162,7 @@ else
     {
         public int TicketId { get; set; }
         public int EventId { get; set; }
-        public string EventName { get; set; }
+        public string EventName { get; set; } = string.Empty;
         public DateTime EventStart { get; set; }
         public DateTime EventEnd { get; set; }
     }

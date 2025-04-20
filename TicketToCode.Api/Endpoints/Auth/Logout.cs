@@ -5,29 +5,15 @@ public class Logout : IEndpoint
     // Mapping
     public static void MapEndpoint(IEndpointRouteBuilder app) => app
         .MapPost("/auth/logout", Handle)
-        .WithSummary("Logout the current user by clearing authentication cookies");
+        .WithSummary("Logout - client will discard the JWT token");
 
     // Models
     public record Response(bool Success, string Message);
 
     // Logic
-    private static IResult Handle(HttpContext context)
+    private static IResult Handle()
     {
-        // Check if the user is authenticated
-        var authCookie = context.Request.Cookies["auth"];
-        if (string.IsNullOrEmpty(authCookie))
-        {
-            return TypedResults.Ok(new Response(false, "No active session found"));
-        }
-
-        // Clear the auth cookie
-        context.Response.Cookies.Delete("auth", new CookieOptions
-        {
-            HttpOnly = true,
-            SameSite = SameSiteMode.None,
-            Secure = true
-        });
-
+        // With JWT, logout is primarily handled client-side
         return TypedResults.Ok(new Response(true, "Logged out successfully"));
     }
 }

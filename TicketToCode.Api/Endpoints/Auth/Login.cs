@@ -13,30 +13,25 @@ public class Login : IEndpoint
 
     // Models
     public record Request(string Username, string Password);
-    public record Response(string Username, string Role);
+    public record Response(string Username, string Role, string Token);
 
     // Logic
     private static Results<Ok<Response>, NotFound<string>> Handle(
         Request request,
         IAuthService authService,
-        HttpContext context)
+        IJwtService jwtService)
     {
-        var result = authService.Login(request.Username, request.Password);
-        if (result == null)
+        var user = authService.Login(request.Username, request.Password);
+        if (user == null)
         {
             return TypedResults.NotFound("Invalid username or password");
         }
 
-        // Set auth cookie with SameSite=None and Secure for cross-origin requests
-        context.Response.Cookies.Append("auth", $"{result.Username}:{result.Role}", new CookieOptions
-        {
-            HttpOnly = true,
-            SameSite = SameSiteMode.None,
-            Secure = true,
-            Expires = DateTimeOffset.UtcNow.AddDays(7)
-        });
-        
-        var response = new Response(result.Username, result.Role);
+        // Generate JWT token
+        var token = jwtService.GenerateToken(user);
+
+        // Return token in response
+        var response = new Response(user.Username, user.Role, token);
         return TypedResults.Ok(response);
     }
 }

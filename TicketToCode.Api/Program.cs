@@ -1,4 +1,7 @@
-﻿using TicketToCode.Api.Endpoints;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using TicketToCode.Api.Endpoints;
 using TicketToCode.Api.Services;
 using TicketToCode.Core.Data;
 using TicketToCode.Core.Interface;
@@ -10,29 +13,47 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 // Default mapping is /openapi/v1.json
 builder.Services.AddOpenApi();
- 
+
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<ISort, SortService>();
 builder.Services.AddSingleton<IFilter, FilterService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
-// Add cookie authentication
-builder.Services.AddAuthentication("Cookies")
-    .AddCookie("Cookies", options =>
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+builder.Services.Configure<JwtSettings>(jwtSettings);
+
+var secretKey = jwtSettings["SecretKey"] ??
+    "ThisIsATemporaryKeyThatShouldBeReplaced12345678901234567890";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.Cookie.Name = "auth";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Strict;
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"] ?? "TicketToCode",
+        ValidAudience = jwtSettings["Audience"] ?? "TicketToCode",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+});
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorClient", builder =>
     {
-        builder.WithOrigins("https://localhost:7205")  //  Use your Blazor app's URL
+        builder.WithOrigins("https://localhost:5224", "http://localhost:5224", "https://localhost:7205", "http://localhost:7205")
                .AllowAnyMethod()
                .AllowAnyHeader()
-               .AllowCredentials();  //  Required for cookies
+               .AllowCredentials();  // Still needed for non-simple CORS requests
     });
 });
 
@@ -47,8 +68,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 
-    // Todo: consider scalar? https://youtu.be/Tx49o-5tkis?feature=shared
-    app.UseSwaggerUI( options =>
+    app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "v1");
         options.DefaultModelsExpandDepth(-1);
@@ -56,14 +76,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-// Add before app.MapEndpoints()
-app.UseCors(options =>
-{
-    options.WithOrigins("https://localhost:7205")
-           .AllowAnyMethod()
-           .AllowAnyHeader()
-           .AllowCredentials();
-});
 
 app.UseAuthentication();
 app.UseAuthorization();

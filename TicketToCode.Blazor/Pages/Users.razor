@@ -1,6 +1,7 @@
 ﻿@page "/users"
 @inject NavigationManager nav
-@inject HttpClient http 
+@inject HttpClient http
+@inject TicketToCode.Blazor.Services.AuthService authService
 
 @using TicketToCode.Core.Models
 @using System.Reflection
@@ -65,7 +66,7 @@ else
     </section>
 }
 
-@code 
+@code
 {
     private class UserModle
     {
@@ -74,7 +75,7 @@ else
         public string Role { get; set; }
         public DateTime CreatedAt { get; set; }
     }
-    
+
     private List<UserModle>? listOfUser;
     private bool isAdmin = false;
     private bool isLoading = true;
@@ -93,18 +94,13 @@ else
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/auth/role");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            
-            var response = await http.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            // Use AuthService instead of calling /auth/role endpoint
+            isAdmin = await authService.IsAuthenticatedAsync() &&
+            (await authService.GetUserRoleAsync()) == "Admin";
+
+            if (!isAdmin)
             {
-                var authData = await response.Content.ReadFromJsonAsync<AuthResponse>();
-                isAdmin = authData?.Role?.Equals("Admin", StringComparison.OrdinalIgnoreCase) ?? false;
-            }
-            else
-            {
-                isAdmin = false;
+                nav.NavigateTo("/"); // Redirect non-admins to home page
             }
         }
         catch (Exception ex)
@@ -114,29 +110,31 @@ else
         }
     }
 
-    private class AuthResponse
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
-
     private async Task GetUsers()
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7206/users/all");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            var request = await authService.CreateAuthorizedRequestMessage(
+            HttpMethod.Get, "https://localhost:7206/users/all");
 
             var response = await http.SendAsync(request);
+
             if (response.IsSuccessStatusCode)
             {
                 var jsonResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Users API Response: " + jsonResponse);
 
                 listOfUser = await response.Content.ReadFromJsonAsync<List<UserModle>>();
-                Console.WriteLine("Deserialized List Count: " + listOfUser?.Count); // Debugging line
+                Console.WriteLine("Deserialized List Count: " + listOfUser?.Count);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                // Handle unauthorized access
+                await authService.LogoutAsync();
+                nav.NavigateTo("/login");
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Console.WriteLine("Exception: " + e.Message);
         }
@@ -145,9 +143,9 @@ else
     private IEnumerable<string> GetRoles()
     {
         return typeof(UserRoles)
-            .GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Where(f => f.IsLiteral && !f.IsInitOnly)
-            .Select(f => f.GetValue(null).ToString());
+        .GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(f => f.IsLiteral && !f.IsInitOnly)
+        .Select(f => f.GetValue(null).ToString());
     }
 
     private async Task SaveUser(UserModle user)
@@ -155,21 +153,25 @@ else
         var userData = new { user.Id, username = user.Username, role = user.Role };
         var jsonContent = JsonContent.Create(userData);
 
-        Console.WriteLine("Sending PUT request with data: " + await jsonContent.ReadAsStringAsync()); // Debugging line
+        Console.WriteLine("Sending PUT request with data: " + await jsonContent.ReadAsStringAsync());
 
-        var request = new HttpRequestMessage(HttpMethod.Put, $"https://localhost:7206/users/edit/{user.Id}")
-        {
-            Content = jsonContent
-        };
-        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        var request = await authService.CreateAuthorizedRequestMessage(
+        HttpMethod.Put, $"https://localhost:7206/users/edit/{user.Id}");
 
+        request.Content = jsonContent;
         var response = await http.SendAsync(request);
-        var responseContent = await response.Content.ReadAsStringAsync(); // Debugging line
-        Console.WriteLine("Response: " + responseContent); // Debugging line
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine("Response: " + responseContent);
 
         if (response.IsSuccessStatusCode)
         {
             Console.WriteLine("User updated successfully.");
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await authService.LogoutAsync();
+            nav.NavigateTo("/login");
         }
         else
         {
@@ -179,14 +181,20 @@ else
 
     private async Task DeleteUser(UserModle user)
     {
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"https://localhost:7206/users/{user.Id}");
-        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        var request = await authService.CreateAuthorizedRequestMessage(
+        HttpMethod.Delete, $"https://localhost:7206/users/{user.Id}");
 
         var response = await http.SendAsync(request);
+
         if (response.IsSuccessStatusCode)
         {
             listOfUser?.Remove(user);
             Console.WriteLine("User deleted successfully.");
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await authService.LogoutAsync();
+            nav.NavigateTo("/login");
         }
         else
         {
